@@ -79,6 +79,23 @@ export default function FoodPage() {
     setShowModal(true);
   }
 
+  async function handleQuickAdd(data: Partial<FoodEntry>) {
+    const entry: FoodEntry = {
+      id:       typeof crypto !== "undefined" && crypto.randomUUID ? crypto.randomUUID() : `${Date.now()}-${Math.random().toString(36).slice(2)}`,
+      date:     new Date().toLocaleDateString("en-CA"),
+      time:     new Date().toTimeString().slice(0, 5),
+      name:     data.name     ?? "Unknown",
+      calories: data.calories ?? 0,
+      protein:  data.protein  ?? 0,
+      carbs:    data.carbs    ?? 0,
+      fat:      data.fat      ?? 0,
+      meal:     data.meal     ?? "snack",
+    };
+    // Optimistic update — UI reflects instantly, Sheets write happens in background
+    setEntries((prev) => [...prev, entry]);
+    foodApi.add(entry).catch(console.error);
+  }
+
   // ── Group by meal ──────────────────────────────────────────────────────────
   const grouped = MEAL_ORDER.map((meal) => ({
     meal,
@@ -103,7 +120,7 @@ export default function FoodPage() {
         </div>
 
         {/* Quick add */}
-        <QuickAddChips onSelect={openModal} />
+        <QuickAddChips onSelect={handleQuickAdd} />
 
         {/* Food log */}
         <div>
