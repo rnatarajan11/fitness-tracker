@@ -36,7 +36,6 @@ function loadItems(): QuickItem[] {
   try {
     const stored = localStorage.getItem(STORAGE_KEY);
     if (stored !== null) return JSON.parse(stored);
-    // First run — seed with defaults
     localStorage.setItem(STORAGE_KEY, JSON.stringify(DEFAULTS));
     return DEFAULTS;
   } catch {
@@ -53,33 +52,36 @@ interface Props {
 }
 
 export default function QuickAddChips({ onSelect }: Props) {
-  // Initialise with DEFAULTS so the section is always visible immediately.
-  // useEffect then overwrites with whatever is in localStorage.
-  const [items,       setItems]       = useState<QuickItem[]>(DEFAULTS);
-  const [showManager, setShowManager] = useState(false);
-  const [form,        setForm]        = useState(BLANK);
+  const [items,      setItems]      = useState<QuickItem[]>(DEFAULTS);
+  const [showNew,    setShowNew]    = useState(false);
+  const [showManage, setShowManage] = useState(false);
+  const [form,       setForm]       = useState(BLANK);
   const nameRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => { setItems(loadItems()); }, []);
 
+  // Focus name input when the New panel opens
   useEffect(() => {
-    if (showManager) setTimeout(() => nameRef.current?.focus(), 60);
-  }, [showManager]);
+    if (showNew) setTimeout(() => nameRef.current?.focus(), 60);
+  }, [showNew]);
+
+  function toggleNew() {
+    setShowNew((v) => !v);
+    setShowManage(false);
+  }
+
+  function toggleManage() {
+    setShowManage((v) => !v);
+    setShowNew(false);
+  }
 
   function field(key: keyof typeof BLANK, value: string) {
     setForm((f) => ({ ...f, [key]: value }));
   }
 
-  function handleDelete(label: string) {
-    const updated = items.filter((i) => i.label !== label);
-    setItems(updated);
-    persist(updated);
-  }
-
   function handleAdd() {
     const name = form.name.trim();
     if (!name || !Number(form.calories)) return;
-    // Use name as label; if a chip with that label already exists, append (2) etc.
     let label = name;
     if (items.some((i) => i.label === label)) label = `${name} (2)`;
     const item: QuickItem = {
@@ -98,8 +100,15 @@ export default function QuickAddChips({ onSelect }: Props) {
     nameRef.current?.focus();
   }
 
+  function handleDelete(label: string) {
+    const updated = items.filter((i) => i.label !== label);
+    setItems(updated);
+    persist(updated);
+  }
+
   function handleKeyDown(e: React.KeyboardEvent) {
-    if (e.key === "Enter") { e.preventDefault(); handleAdd(); }
+    if (e.key === "Enter")  { e.preventDefault(); handleAdd(); }
+    if (e.key === "Escape") { setShowNew(false); setShowManage(false); }
   }
 
   const isValid = form.name.trim().length > 0 && Number(form.calories) > 0;
@@ -111,49 +120,143 @@ export default function QuickAddChips({ onSelect }: Props) {
         <h3 className="text-sm font-semibold" style={{ color: "var(--text-secondary)" }}>
           Quick Add
         </h3>
-        <button
-          onClick={() => setShowManager((v) => !v)}
-          aria-label={showManager ? "Close quick-add manager" : "Manage quick adds"}
-          className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold active:opacity-70 transition-opacity"
-          style={{
-            background: showManager ? "var(--surface-2)" : "var(--accent)",
-            color: "#fff",
-          }}
-        >
-          {showManager ? (
-            <>
-              <svg width="11" height="11" viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round">
-                <line x1="2" y1="2" x2="10" y2="10" />
-                <line x1="10" y1="2" x2="2" y2="10" />
-              </svg>
-              Close
-            </>
-          ) : (
-            <>
-              <svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
-                <path d="M2 4h2M8 4h6M2 8h6M12 8h2M2 12h4M10 12h4" />
-                <circle cx="5.5" cy="4"  r="1.5" fill="currentColor" stroke="none" />
-                <circle cx="9.5" cy="8"  r="1.5" fill="currentColor" stroke="none" />
-                <circle cx="7.5" cy="12" r="1.5" fill="currentColor" stroke="none" />
-              </svg>
-              Manage
-            </>
-          )}
-        </button>
+
+        <div className="flex items-center gap-2">
+          {/* New Quick Add button */}
+          <button
+            onClick={toggleNew}
+            aria-label={showNew ? "Close new quick-add form" : "New quick add"}
+            className="flex items-center gap-1 px-3 py-1.5 rounded-full text-xs font-semibold active:opacity-70 transition-opacity"
+            style={{
+              background: showNew ? "var(--surface-2)" : "var(--accent)",
+              color: "#fff",
+            }}
+          >
+            {showNew ? (
+              <>
+                <svg width="10" height="10" viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round">
+                  <line x1="2" y1="2" x2="10" y2="10" /><line x1="10" y1="2" x2="2" y2="10" />
+                </svg>
+                Close
+              </>
+            ) : (
+              <>
+                <svg width="11" height="11" viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
+                  <line x1="6" y1="1" x2="6" y2="11" /><line x1="1" y1="6" x2="11" y2="6" />
+                </svg>
+                New
+              </>
+            )}
+          </button>
+
+          {/* Manage button */}
+          <button
+            onClick={toggleManage}
+            aria-label={showManage ? "Close manager" : "Manage quick adds"}
+            className="flex items-center gap-1 px-3 py-1.5 rounded-full text-xs font-semibold active:opacity-70 transition-opacity"
+            style={{
+              background: showManage ? "var(--accent)" : "var(--surface)",
+              color: showManage ? "#fff" : "var(--text-primary)",
+              border: showManage ? "none" : "1px solid var(--border)",
+            }}
+          >
+            {showManage ? (
+              <>
+                <svg width="10" height="10" viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round">
+                  <line x1="2" y1="2" x2="10" y2="10" /><line x1="10" y1="2" x2="2" y2="10" />
+                </svg>
+                Close
+              </>
+            ) : (
+              "Manage"
+            )}
+          </button>
+        </div>
       </div>
 
-      {/* ── Manager panel ───────────────────────────────────────────────── */}
-      {showManager && (
+      {/* ── New Quick Add panel ──────────────────────────────────────────── */}
+      {showNew && (
+        <div
+          className="rounded-2xl p-4 mb-3"
+          style={{ background: "var(--surface)", border: "1px solid var(--border)" }}
+          onKeyDown={handleKeyDown}
+        >
+          <p className="text-xs font-semibold mb-3" style={{ color: "var(--text-secondary)" }}>
+            New Quick Add
+          </p>
+
+          <input
+            ref={nameRef}
+            type="text"
+            placeholder="Name"
+            value={form.name}
+            onChange={(e) => field("name", e.target.value)}
+            autoComplete="off"
+            className="w-full rounded-xl px-3 py-2.5 text-sm mb-3 outline-none"
+            style={{
+              background: "var(--surface-2)",
+              color: "var(--text-primary)",
+              border: "1px solid var(--border)",
+            }}
+          />
+
+          <input
+            type="number"
+            inputMode="numeric"
+            placeholder="Calories"
+            value={form.calories}
+            onChange={(e) => field("calories", e.target.value)}
+            className="w-full rounded-xl px-3 py-2.5 text-sm text-center outline-none mb-3"
+            style={{
+              background: "var(--surface-2)",
+              color: "var(--text-primary)",
+              border: "1px solid var(--border)",
+            }}
+          />
+
+          <div className="flex gap-2 mb-4">
+            {(["protein", "carbs", "fat"] as const).map((macro) => (
+              <div key={macro} className="flex-1 relative">
+                <input
+                  type="number"
+                  inputMode="decimal"
+                  placeholder={macro.charAt(0).toUpperCase() + macro.slice(1)}
+                  value={form[macro]}
+                  onChange={(e) => field(macro, e.target.value)}
+                  className="w-full rounded-xl px-2 py-2.5 text-sm text-center outline-none"
+                  style={{
+                    background: "var(--surface-2)",
+                    color: "var(--text-primary)",
+                    border: "1px solid var(--border)",
+                  }}
+                />
+                <span
+                  className="absolute right-2 top-1/2 -translate-y-1/2 text-xs pointer-events-none"
+                  style={{ color: "var(--text-secondary)" }}
+                >g</span>
+              </div>
+            ))}
+          </div>
+
+          <button
+            onClick={handleAdd}
+            disabled={!isValid}
+            className="w-full py-2.5 rounded-xl text-sm font-semibold text-white transition-opacity"
+            style={{ background: "var(--accent)", opacity: isValid ? 1 : 0.4 }}
+          >
+            Save Quick Add
+          </button>
+        </div>
+      )}
+
+      {/* ── Manage panel ────────────────────────────────────────────────── */}
+      {showManage && (
         <div
           className="rounded-2xl mb-3 overflow-hidden"
           style={{ background: "var(--surface)", border: "1px solid var(--border)" }}
         >
-          {/* List of existing items */}
           {items.length === 0 ? (
-            <p
-              className="text-sm text-center py-5"
-              style={{ color: "var(--text-secondary)" }}
-            >
+            <p className="text-sm text-center py-5" style={{ color: "var(--text-secondary)" }}>
               No quick adds yet.
             </p>
           ) : (
@@ -190,104 +293,26 @@ export default function QuickAddChips({ onSelect }: Props) {
               ))}
             </ul>
           )}
-
-          {/* Divider + Add form */}
-          <div style={{ borderTop: "1px solid var(--border)" }} className="px-4 pt-4 pb-4">
-            <p className="text-xs font-semibold mb-3" style={{ color: "var(--text-secondary)" }}>
-              Add new
-            </p>
-
-            <input
-              ref={nameRef}
-              type="text"
-              placeholder="Name"
-              value={form.name}
-              onChange={(e) => field("name", e.target.value)}
-              onKeyDown={handleKeyDown}
-              autoComplete="off"
-              className="w-full rounded-xl px-3 py-2.5 text-sm mb-3 outline-none"
-              style={{
-                background: "var(--surface-2)",
-                color: "var(--text-primary)",
-                border: "1px solid var(--border)",
-              }}
-            />
-
-            <div className="mb-3">
-              <input
-                type="number"
-                inputMode="numeric"
-                placeholder="Calories"
-                value={form.calories}
-                onChange={(e) => field("calories", e.target.value)}
-                onKeyDown={handleKeyDown}
-                className="w-full rounded-xl px-3 py-2.5 text-sm text-center outline-none"
-                style={{
-                  background: "var(--surface-2)",
-                  color: "var(--text-primary)",
-                  border: "1px solid var(--border)",
-                }}
-              />
-            </div>
-
-            <div className="flex gap-2 mb-4">
-              {(["protein", "carbs", "fat"] as const).map((macro) => (
-                <div key={macro} className="flex-1 relative">
-                  <input
-                    type="number"
-                    inputMode="decimal"
-                    placeholder={macro.charAt(0).toUpperCase() + macro.slice(1)}
-                    value={form[macro]}
-                    onChange={(e) => field(macro, e.target.value)}
-                    onKeyDown={handleKeyDown}
-                    className="w-full rounded-xl px-2 py-2.5 text-sm text-center outline-none"
-                    style={{
-                      background: "var(--surface-2)",
-                      color: "var(--text-primary)",
-                      border: "1px solid var(--border)",
-                    }}
-                  />
-                  <span
-                    className="absolute right-2 top-1/2 -translate-y-1/2 text-xs pointer-events-none"
-                    style={{ color: "var(--text-secondary)" }}
-                  >
-                    g
-                  </span>
-                </div>
-              ))}
-            </div>
-
-            <button
-              onClick={handleAdd}
-              disabled={!isValid}
-              className="w-full py-2.5 rounded-xl text-sm font-semibold text-white transition-opacity"
-              style={{ background: "var(--accent)", opacity: isValid ? 1 : 0.4 }}
-            >
-              Save Quick Add
-            </button>
-          </div>
         </div>
       )}
 
       {/* ── Chips row ───────────────────────────────────────────────────── */}
-      {items.length > 0 && (
-        <div className="flex gap-2 overflow-x-auto pb-1 -mx-4 px-4 no-scrollbar">
-          {items.map(({ label, ...data }) => (
-            <button
-              key={label}
-              onClick={() => onSelect(data)}
-              className="flex-none px-3.5 py-2 rounded-full text-sm font-medium whitespace-nowrap active:opacity-60 transition-opacity"
-              style={{
-                background: "var(--surface)",
-                color: "var(--text-primary)",
-                border: "1px solid var(--border)",
-              }}
-            >
-              {label}
-            </button>
-          ))}
-        </div>
-      )}
+      <div className="flex gap-2 overflow-x-auto pb-1 -mx-4 px-4 no-scrollbar">
+        {items.map(({ label, ...data }) => (
+          <button
+            key={label}
+            onClick={() => onSelect(data)}
+            className="flex-none px-3.5 py-2 rounded-full text-sm font-medium whitespace-nowrap active:opacity-60 transition-opacity"
+            style={{
+              background: "var(--surface)",
+              color: "var(--text-primary)",
+              border: "1px solid var(--border)",
+            }}
+          >
+            {label}
+          </button>
+        ))}
+      </div>
     </div>
   );
 }
