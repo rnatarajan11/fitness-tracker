@@ -53,7 +53,9 @@ interface Props {
 }
 
 export default function QuickAddChips({ onSelect }: Props) {
-  const [items,       setItems]       = useState<QuickItem[]>([]);
+  // Initialise with DEFAULTS so the section is always visible immediately.
+  // useEffect then overwrites with whatever is in localStorage.
+  const [items,       setItems]       = useState<QuickItem[]>(DEFAULTS);
   const [showManager, setShowManager] = useState(false);
   const [form,        setForm]        = useState(BLANK);
   const nameRef = useRef<HTMLInputElement>(null);
