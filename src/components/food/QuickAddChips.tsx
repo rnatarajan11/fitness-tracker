@@ -35,12 +35,18 @@ function loadItems(): QuickItem[] {
   if (typeof window === "undefined") return DEFAULTS;
   try {
     const stored = localStorage.getItem(STORAGE_KEY);
-    if (stored !== null) return JSON.parse(stored);
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(DEFAULTS));
-    return DEFAULTS;
+    if (stored !== null) {
+      const parsed = JSON.parse(stored);
+      // Guard: if stored value isn't a valid array, wipe it and reseed
+      if (Array.isArray(parsed) && parsed.length > 0 && "label" in parsed[0]) {
+        return parsed as QuickItem[];
+      }
+    }
   } catch {
-    return DEFAULTS;
+    // fall through to reseed
   }
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(DEFAULTS));
+  return DEFAULTS;
 }
 
 function persist(items: QuickItem[]) {
