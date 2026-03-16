@@ -3,9 +3,14 @@
 import { useState, useEffect, useRef } from "react";
 import type { FoodEntry } from "@/lib/types";
 
-type QuickItem = Omit<Partial<FoodEntry>, "meal"> & {
-  label: string;
-  meal: FoodEntry["meal"];
+type QuickItem = {
+  label:    string;
+  name:     string;
+  calories: number;
+  protein:  number;
+  carbs:    number;
+  fat:      number;
+  meal:     FoodEntry["meal"];
 };
 
 const DEFAULTS: QuickItem[] = [
@@ -24,154 +29,207 @@ const DEFAULTS: QuickItem[] = [
 ];
 
 const STORAGE_KEY = "fittrack-quick-adds";
-
 const BLANK = { name: "", calories: "", protein: "", carbs: "", fat: "" };
 
-function loadCustom(): QuickItem[] {
-  if (typeof window === "undefined") return [];
+function loadItems(): QuickItem[] {
+  if (typeof window === "undefined") return DEFAULTS;
   try {
-    return JSON.parse(localStorage.getItem(STORAGE_KEY) ?? "[]");
+    const stored = localStorage.getItem(STORAGE_KEY);
+    if (stored !== null) return JSON.parse(stored);
+    // First run — seed with defaults
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(DEFAULTS));
+    return DEFAULTS;
   } catch {
-    return [];
+    return DEFAULTS;
   }
 }
 
+function persist(items: QuickItem[]) {
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(items));
+}
+
 interface Props {
-  onSelect: (data: Partial<FoodEntry>) => void;
+  onSelect: (data: Omit<QuickItem, "label">) => void;
 }
 
 export default function QuickAddChips({ onSelect }: Props) {
-  const [custom,     setCustom]     = useState<QuickItem[]>([]);
-  const [showPanel,  setShowPanel]  = useState(false);
-  const [form,       setForm]       = useState(BLANK);
+  const [items,       setItems]       = useState<QuickItem[]>([]);
+  const [showManager, setShowManager] = useState(false);
+  const [form,        setForm]        = useState(BLANK);
   const nameRef = useRef<HTMLInputElement>(null);
 
-  useEffect(() => { setCustom(loadCustom()); }, []);
+  useEffect(() => { setItems(loadItems()); }, []);
 
-  // Focus name input when panel opens
   useEffect(() => {
-    if (showPanel) setTimeout(() => nameRef.current?.focus(), 50);
-  }, [showPanel]);
+    if (showManager) setTimeout(() => nameRef.current?.focus(), 60);
+  }, [showManager]);
 
   function field(key: keyof typeof BLANK, value: string) {
     setForm((f) => ({ ...f, [key]: value }));
   }
 
-  function handleSave() {
-    if (!form.name.trim() || !Number(form.calories)) return;
+  function handleDelete(label: string) {
+    const updated = items.filter((i) => i.label !== label);
+    setItems(updated);
+    persist(updated);
+  }
+
+  function handleAdd() {
+    const name = form.name.trim();
+    if (!name || !Number(form.calories)) return;
+    // Use name as label; if a chip with that label already exists, append (2) etc.
+    let label = name;
+    if (items.some((i) => i.label === label)) label = `${name} (2)`;
     const item: QuickItem = {
-      label:    form.name.trim(),
-      name:     form.name.trim(),
+      label,
+      name,
       calories: Number(form.calories),
       protein:  Number(form.protein)  || 0,
       carbs:    Number(form.carbs)    || 0,
       fat:      Number(form.fat)      || 0,
       meal:     "snack",
     };
-    const updated = [...custom, item];
-    setCustom(updated);
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
+    const updated = [...items, item];
+    setItems(updated);
+    persist(updated);
     setForm(BLANK);
-    setShowPanel(false);
+    nameRef.current?.focus();
   }
 
   function handleKeyDown(e: React.KeyboardEvent) {
-    if (e.key === "Enter") { e.preventDefault(); handleSave(); }
-    if (e.key === "Escape") setShowPanel(false);
+    if (e.key === "Enter") { e.preventDefault(); handleAdd(); }
   }
 
   const isValid = form.name.trim().length > 0 && Number(form.calories) > 0;
-  const all = [...DEFAULTS, ...custom];
 
   return (
     <div>
-      {/* Header row */}
+      {/* ── Header ─────────────────────────────────────────────────────── */}
       <div className="flex items-center justify-between mb-2">
         <h3 className="text-sm font-semibold" style={{ color: "var(--text-secondary)" }}>
           Quick Add
         </h3>
         <button
-          onClick={() => setShowPanel((v) => !v)}
-          aria-label={showPanel ? "Cancel" : "Create quick add"}
-          className="w-6 h-6 rounded-full flex items-center justify-center transition-colors active:opacity-60"
+          onClick={() => setShowManager((v) => !v)}
+          aria-label={showManager ? "Close quick-add manager" : "Manage quick adds"}
+          className="flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium transition-colors active:opacity-60"
           style={{
-            background: showPanel ? "var(--surface-2)" : "var(--accent)",
-            color: "#fff",
+            background: showManager ? "var(--surface-2)" : "var(--surface)",
+            color: showManager ? "var(--text-primary)" : "var(--text-secondary)",
+            border: "1px solid var(--border)",
           }}
         >
-          {showPanel ? (
-            // × close
-            <svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
-              <line x1="2" y1="2" x2="10" y2="10" />
-              <line x1="10" y1="2" x2="2" y2="10" />
-            </svg>
-          ) : (
-            // + add
-            <svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
-              <line x1="6" y1="1" x2="6" y2="11" />
-              <line x1="1" y1="6" x2="11" y2="6" />
-            </svg>
-          )}
+          {/* Sliders icon */}
+          <svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round">
+            <line x1="2" y1="4"  x2="14" y2="4"  />
+            <line x1="2" y1="8"  x2="14" y2="8"  />
+            <line x1="2" y1="12" x2="14" y2="12" />
+            <circle cx="5"  cy="4"  r="1.5" fill="var(--surface)" />
+            <circle cx="10" cy="8"  r="1.5" fill="var(--surface)" />
+            <circle cx="6"  cy="12" r="1.5" fill="var(--surface)" />
+          </svg>
+          Manage
         </button>
       </div>
 
-      {/* Creation panel */}
-      {showPanel && (
+      {/* ── Manager panel ───────────────────────────────────────────────── */}
+      {showManager && (
         <div
-          className="rounded-2xl p-4 mb-3"
+          className="rounded-2xl mb-3 overflow-hidden"
           style={{ background: "var(--surface)", border: "1px solid var(--border)" }}
-          onKeyDown={handleKeyDown}
         >
-          {/* Name */}
-          <input
-            ref={nameRef}
-            type="text"
-            placeholder="Name (e.g. Greek yogurt)"
-            value={form.name}
-            onChange={(e) => field("name", e.target.value)}
-            autoComplete="off"
-            className="w-full rounded-xl px-3 py-2.5 text-sm mb-3 outline-none"
-            style={{
-              background: "var(--surface-2)",
-              color: "var(--text-primary)",
-              border: "1px solid var(--border)",
-            }}
-          />
+          {/* List of existing items */}
+          {items.length === 0 ? (
+            <p
+              className="text-sm text-center py-5"
+              style={{ color: "var(--text-secondary)" }}
+            >
+              No quick adds yet.
+            </p>
+          ) : (
+            <ul>
+              {items.map((item, idx) => (
+                <li
+                  key={item.label}
+                  className="flex items-center justify-between px-4 py-3"
+                  style={{
+                    borderBottom: idx < items.length - 1 ? "1px solid var(--border)" : "none",
+                  }}
+                >
+                  <div className="min-w-0 flex-1">
+                    <div className="text-sm font-medium truncate" style={{ color: "var(--text-primary)" }}>
+                      {item.name}
+                    </div>
+                    <div className="text-xs mt-0.5 tabular-nums" style={{ color: "var(--text-secondary)" }}>
+                      {item.calories} kcal · P {item.protein}g · C {item.carbs}g · F {item.fat}g
+                    </div>
+                  </div>
+                  <button
+                    onClick={() => handleDelete(item.label)}
+                    aria-label={`Delete ${item.name}`}
+                    className="ml-3 flex-none w-7 h-7 flex items-center justify-center rounded-full active:opacity-60 transition-opacity"
+                    style={{ background: "rgba(239,68,68,0.12)", color: "#f87171" }}
+                  >
+                    <svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <polyline points="3,5 4,14 12,14 13,5" />
+                      <line x1="1" y1="5" x2="15" y2="5" />
+                      <path d="M6 5V3h4v2" />
+                    </svg>
+                  </button>
+                </li>
+              ))}
+            </ul>
+          )}
 
-          {/* Kcal — full width */}
-          <div className="mb-3">
-            <label className="text-xs mb-1 block" style={{ color: "var(--text-secondary)" }}>
-              Calories
-            </label>
+          {/* Divider + Add form */}
+          <div style={{ borderTop: "1px solid var(--border)" }} className="px-4 pt-4 pb-4">
+            <p className="text-xs font-semibold mb-3" style={{ color: "var(--text-secondary)" }}>
+              Add new
+            </p>
+
             <input
-              type="number"
-              inputMode="numeric"
-              placeholder="0"
-              value={form.calories}
-              onChange={(e) => field("calories", e.target.value)}
-              className="w-full rounded-xl px-3 py-2.5 text-sm text-center outline-none"
+              ref={nameRef}
+              type="text"
+              placeholder="Name"
+              value={form.name}
+              onChange={(e) => field("name", e.target.value)}
+              onKeyDown={handleKeyDown}
+              autoComplete="off"
+              className="w-full rounded-xl px-3 py-2.5 text-sm mb-3 outline-none"
               style={{
                 background: "var(--surface-2)",
                 color: "var(--text-primary)",
                 border: "1px solid var(--border)",
               }}
             />
-          </div>
 
-          {/* Macros row */}
-          <div className="flex gap-2 mb-4">
-            {(["protein", "carbs", "fat"] as const).map((macro) => (
-              <div key={macro} className="flex-1">
-                <label className="text-xs mb-1 block capitalize" style={{ color: "var(--text-secondary)" }}>
-                  {macro}
-                </label>
-                <div className="relative">
+            <div className="mb-3">
+              <input
+                type="number"
+                inputMode="numeric"
+                placeholder="Calories"
+                value={form.calories}
+                onChange={(e) => field("calories", e.target.value)}
+                onKeyDown={handleKeyDown}
+                className="w-full rounded-xl px-3 py-2.5 text-sm text-center outline-none"
+                style={{
+                  background: "var(--surface-2)",
+                  color: "var(--text-primary)",
+                  border: "1px solid var(--border)",
+                }}
+              />
+            </div>
+
+            <div className="flex gap-2 mb-4">
+              {(["protein", "carbs", "fat"] as const).map((macro) => (
+                <div key={macro} className="flex-1 relative">
                   <input
                     type="number"
                     inputMode="decimal"
-                    placeholder="0"
+                    placeholder={macro.charAt(0).toUpperCase() + macro.slice(1)}
                     value={form[macro]}
                     onChange={(e) => field(macro, e.target.value)}
+                    onKeyDown={handleKeyDown}
                     className="w-full rounded-xl px-2 py-2.5 text-sm text-center outline-none"
                     style={{
                       background: "var(--surface-2)",
@@ -186,39 +244,40 @@ export default function QuickAddChips({ onSelect }: Props) {
                     g
                   </span>
                 </div>
-              </div>
-            ))}
-          </div>
+              ))}
+            </div>
 
-          {/* Save button */}
-          <button
-            onClick={handleSave}
-            disabled={!isValid}
-            className="w-full py-2.5 rounded-xl text-sm font-semibold text-white transition-opacity"
-            style={{ background: "var(--accent)", opacity: isValid ? 1 : 0.4 }}
-          >
-            Save Quick Add
-          </button>
+            <button
+              onClick={handleAdd}
+              disabled={!isValid}
+              className="w-full py-2.5 rounded-xl text-sm font-semibold text-white transition-opacity"
+              style={{ background: "var(--accent)", opacity: isValid ? 1 : 0.4 }}
+            >
+              Save Quick Add
+            </button>
+          </div>
         </div>
       )}
 
-      {/* Chips row */}
-      <div className="flex gap-2 overflow-x-auto pb-1 -mx-4 px-4 no-scrollbar">
-        {all.map(({ label, ...data }) => (
-          <button
-            key={label}
-            onClick={() => onSelect(data)}
-            className="flex-none px-3.5 py-2 rounded-full text-sm font-medium whitespace-nowrap active:opacity-60 transition-opacity"
-            style={{
-              background: "var(--surface)",
-              color: "var(--text-primary)",
-              border: "1px solid var(--border)",
-            }}
-          >
-            {label}
-          </button>
-        ))}
-      </div>
+      {/* ── Chips row ───────────────────────────────────────────────────── */}
+      {items.length > 0 && (
+        <div className="flex gap-2 overflow-x-auto pb-1 -mx-4 px-4 no-scrollbar">
+          {items.map(({ label, ...data }) => (
+            <button
+              key={label}
+              onClick={() => onSelect(data)}
+              className="flex-none px-3.5 py-2 rounded-full text-sm font-medium whitespace-nowrap active:opacity-60 transition-opacity"
+              style={{
+                background: "var(--surface)",
+                color: "var(--text-primary)",
+                border: "1px solid var(--border)",
+              }}
+            >
+              {label}
+            </button>
+          ))}
+        </div>
+      )}
     </div>
   );
 }
