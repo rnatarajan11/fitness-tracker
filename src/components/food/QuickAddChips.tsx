@@ -37,7 +37,6 @@ function loadItems(): QuickItem[] {
     const stored = localStorage.getItem(STORAGE_KEY);
     if (stored !== null) {
       const parsed = JSON.parse(stored);
-      // Guard: if stored value isn't a valid array, wipe it and reseed
       if (Array.isArray(parsed) && parsed.length > 0 && "label" in parsed[0]) {
         return parsed as QuickItem[];
       }
@@ -58,31 +57,27 @@ interface Props {
 }
 
 export default function QuickAddChips({ onSelect }: Props) {
-  const [items,      setItems]      = useState<QuickItem[]>(DEFAULTS);
-  const [showNew,    setShowNew]    = useState(false);
-  const [showManage, setShowManage] = useState(false);
-  const [form,       setForm]       = useState(BLANK);
+  const [items,    setItems]    = useState<QuickItem[]>(DEFAULTS);
+  const [showPanel, setShowPanel] = useState(false);
+  const [form,     setForm]     = useState(BLANK);
   const nameRef = useRef<HTMLInputElement>(null);
 
+  // Load persisted items on mount
   useEffect(() => { setItems(loadItems()); }, []);
 
-  // Focus name input when the New panel opens
+  // Focus name input when panel opens
   useEffect(() => {
-    if (showNew) setTimeout(() => nameRef.current?.focus(), 60);
-  }, [showNew]);
-
-  function toggleNew() {
-    setShowNew((v) => !v);
-    setShowManage(false);
-  }
-
-  function toggleManage() {
-    setShowManage((v) => !v);
-    setShowNew(false);
-  }
+    if (showPanel) setTimeout(() => nameRef.current?.focus(), 60);
+  }, [showPanel]);
 
   function field(key: keyof typeof BLANK, value: string) {
     setForm((f) => ({ ...f, [key]: value }));
+  }
+
+  function handleDelete(label: string) {
+    const updated = items.filter((i) => i.label !== label);
+    setItems(updated);
+    persist(updated);
   }
 
   function handleAdd() {
@@ -106,15 +101,9 @@ export default function QuickAddChips({ onSelect }: Props) {
     nameRef.current?.focus();
   }
 
-  function handleDelete(label: string) {
-    const updated = items.filter((i) => i.label !== label);
-    setItems(updated);
-    persist(updated);
-  }
-
-  function handleKeyDown(e: React.KeyboardEvent) {
+  function onKeyDown(e: React.KeyboardEvent) {
     if (e.key === "Enter")  { e.preventDefault(); handleAdd(); }
-    if (e.key === "Escape") { setShowNew(false); setShowManage(false); }
+    if (e.key === "Escape") setShowPanel(false);
   }
 
   const isValid = form.name.trim().length > 0 && Number(form.calories) > 0;
@@ -126,149 +115,166 @@ export default function QuickAddChips({ onSelect }: Props) {
         <h3 className="text-sm font-semibold" style={{ color: "var(--text-secondary)" }}>
           Quick Add
         </h3>
-
-        <div className="flex items-center gap-2">
-          {/* + New button */}
-          <button
-            onClick={toggleNew}
-            aria-label={showNew ? "Close new quick-add form" : "New quick add"}
-            className="w-7 h-7 rounded-full flex items-center justify-center font-bold text-sm active:opacity-70 transition-opacity"
-            style={{ background: "var(--accent)", color: "#fff" }}
-          >
-            {showNew ? "×" : "+"}
-          </button>
-
-          {/* M Manage button */}
-          <button
-            onClick={toggleManage}
-            aria-label={showManage ? "Close manager" : "Manage quick adds"}
-            className="w-7 h-7 rounded-full flex items-center justify-center font-bold text-sm active:opacity-70 transition-opacity"
-            style={{ background: "var(--accent)", color: "#fff" }}
-          >
-            {showManage ? "×" : "M"}
-          </button>
-        </div>
+        <button
+          onClick={() => setShowPanel((v) => !v)}
+          aria-label={showPanel ? "Close quick add panel" : "Open quick add panel"}
+          style={{
+            width: 28,
+            height: 28,
+            borderRadius: "50%",
+            background: "var(--accent)",
+            color: "#fff",
+            border: "none",
+            cursor: "pointer",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            fontWeight: 700,
+            fontSize: 18,
+            lineHeight: 1,
+            flexShrink: 0,
+          }}
+        >
+          {showPanel ? "×" : "+"}
+        </button>
       </div>
 
-      {/* ── New Quick Add panel ──────────────────────────────────────────── */}
-      {showNew && (
-        <div
-          className="rounded-2xl p-4 mb-3"
-          style={{ background: "var(--surface)", border: "1px solid var(--border)" }}
-          onKeyDown={handleKeyDown}
-        >
-          <p className="text-xs font-semibold mb-3" style={{ color: "var(--text-secondary)" }}>
-            New Quick Add
-          </p>
-
-          <input
-            ref={nameRef}
-            type="text"
-            placeholder="Name"
-            value={form.name}
-            onChange={(e) => field("name", e.target.value)}
-            autoComplete="off"
-            className="w-full rounded-xl px-3 py-2.5 text-sm mb-3 outline-none"
-            style={{
-              background: "var(--surface-2)",
-              color: "var(--text-primary)",
-              border: "1px solid var(--border)",
-            }}
-          />
-
-          <input
-            type="number"
-            inputMode="numeric"
-            placeholder="Calories"
-            value={form.calories}
-            onChange={(e) => field("calories", e.target.value)}
-            className="w-full rounded-xl px-3 py-2.5 text-sm text-center outline-none mb-3"
-            style={{
-              background: "var(--surface-2)",
-              color: "var(--text-primary)",
-              border: "1px solid var(--border)",
-            }}
-          />
-
-          <div className="flex gap-2 mb-4">
-            {(["protein", "carbs", "fat"] as const).map((macro) => (
-              <div key={macro} className="flex-1 relative">
-                <input
-                  type="number"
-                  inputMode="decimal"
-                  placeholder={macro.charAt(0).toUpperCase() + macro.slice(1)}
-                  value={form[macro]}
-                  onChange={(e) => field(macro, e.target.value)}
-                  className="w-full rounded-xl px-2 py-2.5 text-sm text-center outline-none"
-                  style={{
-                    background: "var(--surface-2)",
-                    color: "var(--text-primary)",
-                    border: "1px solid var(--border)",
-                  }}
-                />
-                <span
-                  className="absolute right-2 top-1/2 -translate-y-1/2 text-xs pointer-events-none"
-                  style={{ color: "var(--text-secondary)" }}
-                >g</span>
-              </div>
-            ))}
-          </div>
-
-          <button
-            onClick={handleAdd}
-            disabled={!isValid}
-            className="w-full py-2.5 rounded-xl text-sm font-semibold text-white transition-opacity"
-            style={{ background: "var(--accent)", opacity: isValid ? 1 : 0.4 }}
-          >
-            Save Quick Add
-          </button>
-        </div>
-      )}
-
-      {/* ── Manage panel ────────────────────────────────────────────────── */}
-      {showManage && (
+      {/* ── Panel ───────────────────────────────────────────────────────── */}
+      {showPanel && (
         <div
           className="rounded-2xl mb-3 overflow-hidden"
           style={{ background: "var(--surface)", border: "1px solid var(--border)" }}
         >
-          {items.length === 0 ? (
-            <p className="text-sm text-center py-5" style={{ color: "var(--text-secondary)" }}>
-              No quick adds yet.
+          {/* ── Section 1: existing quick adds ── */}
+          <div style={{ borderBottom: "1px solid var(--border)" }}>
+            <p
+              className="px-4 pt-3 pb-2 text-xs font-semibold"
+              style={{ color: "var(--text-secondary)" }}
+            >
+              Your Quick Adds
             </p>
-          ) : (
-            <ul>
-              {items.map((item, idx) => (
-                <li
-                  key={item.label}
-                  className="flex items-center justify-between px-4 py-3"
-                  style={{
-                    borderBottom: idx < items.length - 1 ? "1px solid var(--border)" : "none",
-                  }}
-                >
-                  <div className="min-w-0 flex-1">
-                    <div className="text-sm font-medium truncate" style={{ color: "var(--text-primary)" }}>
-                      {item.name}
-                    </div>
-                    <div className="text-xs mt-0.5 tabular-nums" style={{ color: "var(--text-secondary)" }}>
-                      {item.calories} kcal · P {item.protein}g · C {item.carbs}g · F {item.fat}g
-                    </div>
-                  </div>
-                  <button
-                    onClick={() => handleDelete(item.label)}
-                    aria-label={`Delete ${item.name}`}
-                    className="ml-3 flex-none w-7 h-7 flex items-center justify-center rounded-full active:opacity-60 transition-opacity"
-                    style={{ background: "rgba(239,68,68,0.12)", color: "#f87171" }}
+            {items.length === 0 ? (
+              <p className="px-4 pb-3 text-sm" style={{ color: "var(--text-secondary)" }}>
+                No quick adds yet.
+              </p>
+            ) : (
+              <ul>
+                {items.map((item, idx) => (
+                  <li
+                    key={item.label}
+                    className="flex items-center justify-between px-4 py-2.5"
+                    style={{
+                      borderTop: idx > 0 ? "1px solid var(--border)" : "none",
+                    }}
                   >
-                    <svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                      <polyline points="3,5 4,14 12,14 13,5" />
-                      <line x1="1" y1="5" x2="15" y2="5" />
-                      <path d="M6 5V3h4v2" />
-                    </svg>
-                  </button>
-                </li>
+                    <div className="min-w-0 flex-1">
+                      <div className="text-sm font-medium truncate" style={{ color: "var(--text-primary)" }}>
+                        {item.name}
+                      </div>
+                      <div className="text-xs mt-0.5 tabular-nums" style={{ color: "var(--text-secondary)" }}>
+                        {item.calories} kcal · P {item.protein}g · C {item.carbs}g · F {item.fat}g
+                      </div>
+                    </div>
+                    <button
+                      onClick={() => handleDelete(item.label)}
+                      aria-label={`Delete ${item.name}`}
+                      style={{
+                        marginLeft: 12,
+                        flexShrink: 0,
+                        width: 28,
+                        height: 28,
+                        borderRadius: "50%",
+                        background: "rgba(239,68,68,0.15)",
+                        color: "#f87171",
+                        border: "none",
+                        cursor: "pointer",
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                      }}
+                    >
+                      <svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <polyline points="3,5 4,14 12,14 13,5" />
+                        <line x1="1" y1="5" x2="15" y2="5" />
+                        <path d="M6 5V3h4v2" />
+                      </svg>
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
+
+          {/* ── Section 2: add new ── */}
+          <div className="px-4 pt-3 pb-4" onKeyDown={onKeyDown}>
+            <p className="text-xs font-semibold mb-3" style={{ color: "var(--text-secondary)" }}>
+              Add New
+            </p>
+
+            <input
+              ref={nameRef}
+              type="text"
+              placeholder="Name"
+              value={form.name}
+              onChange={(e) => field("name", e.target.value)}
+              autoComplete="off"
+              className="w-full rounded-xl px-3 py-2.5 text-sm mb-3 outline-none"
+              style={{
+                background: "var(--surface-2)",
+                color: "var(--text-primary)",
+                border: "1px solid var(--border)",
+              }}
+            />
+
+            <input
+              type="number"
+              inputMode="numeric"
+              placeholder="Calories"
+              value={form.calories}
+              onChange={(e) => field("calories", e.target.value)}
+              className="w-full rounded-xl px-3 py-2.5 text-sm text-center outline-none mb-3"
+              style={{
+                background: "var(--surface-2)",
+                color: "var(--text-primary)",
+                border: "1px solid var(--border)",
+              }}
+            />
+
+            <div className="flex gap-2 mb-4">
+              {(["protein", "carbs", "fat"] as const).map((macro) => (
+                <div key={macro} className="flex-1 relative">
+                  <input
+                    type="number"
+                    inputMode="decimal"
+                    placeholder={macro.charAt(0).toUpperCase() + macro.slice(1)}
+                    value={form[macro]}
+                    onChange={(e) => field(macro, e.target.value)}
+                    className="w-full rounded-xl px-2 py-2.5 text-sm text-center outline-none"
+                    style={{
+                      background: "var(--surface-2)",
+                      color: "var(--text-primary)",
+                      border: "1px solid var(--border)",
+                    }}
+                  />
+                  <span
+                    className="absolute right-2 top-1/2 -translate-y-1/2 text-xs pointer-events-none"
+                    style={{ color: "var(--text-secondary)" }}
+                  >
+                    g
+                  </span>
+                </div>
               ))}
-            </ul>
-          )}
+            </div>
+
+            <button
+              onClick={handleAdd}
+              disabled={!isValid}
+              className="w-full py-2.5 rounded-xl text-sm font-semibold text-white transition-opacity"
+              style={{ background: "var(--accent)", opacity: isValid ? 1 : 0.4 }}
+            >
+              Save Quick Add
+            </button>
+          </div>
         </div>
       )}
 
