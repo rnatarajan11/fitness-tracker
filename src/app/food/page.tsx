@@ -39,7 +39,9 @@ export default function FoodPage() {
       .getAll()
       .then((all) => {
         const today = todayISO();
-        setEntries(all.filter((e) => e.date === today));
+        // GAS may return date cells as ISO timestamps ("2025-03-15T00:00:00.000Z")
+        // rather than plain "YYYY-MM-DD" strings — slice to first 10 chars to normalise.
+        setEntries(all.filter((e) => String(e.date).slice(0, 10) === today));
       })
       .catch((err: unknown) => setError(String(err)))
       .finally(() => setLoading(false));
@@ -62,10 +64,11 @@ export default function FoodPage() {
 
   // ── Actions ────────────────────────────────────────────────────────────────
   async function handleAdd(entry: FoodEntry) {
-    await foodApi.add(entry);
+    // Optimistic update — show immediately, write to Sheets in background
     setEntries((prev) => [...prev, entry]);
     setShowModal(false);
     setPrefill({});
+    foodApi.add(entry).catch(console.error);
   }
 
   async function handleDelete(id: string) {

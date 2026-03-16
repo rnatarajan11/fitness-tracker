@@ -32,14 +32,31 @@ export async function POST(request: NextRequest) {
 
   try {
     const body = await request.json();
-    const res = await fetch(GAS_URL, {
+    const jsonBody = JSON.stringify(body);
+    const headers = { "Content-Type": "application/json" };
+
+    // GAS web apps return a 302 redirect on POST. Node's fetch follows 302
+    // by converting POST→GET (RFC 7231), which drops the body and calls
+    // doGet instead of doPost. Fix: capture the redirect target manually,
+    // then POST directly to that URL so the body is preserved.
+    let targetUrl = GAS_URL;
+    const probe = await fetch(GAS_URL, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(body),
+      redirect: "manual",
+      headers,
+      body: jsonBody,
     });
+    if (probe.status >= 300 && probe.status < 400) {
+      targetUrl = probe.headers.get("location") ?? GAS_URL;
+    }
+
+    const res = await fetch(targetUrl, { method: "POST", headers, body: jsonBody });
     const text = await res.text();
-    const data = JSON.parse(text);
-    return NextResponse.json(data);
+    // Guard against GAS returning an HTML error page instead of JSON
+    if (!text.trimStart().startsWith("{") && !text.trimStart().startsWith("[")) {
+      throw new Error(`GAS returned non-JSON response: ${text.slice(0, 120)}`);
+    }
+    return NextResponse.json(JSON.parse(text));
   } catch (err) {
     return NextResponse.json({ error: String(err) }, { status: 502 });
   }

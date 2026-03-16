@@ -75,9 +75,15 @@ function getRows(sheetName) {
   return data.slice(1).map((row) => {
     const obj = {};
     headers.forEach((h, i) => {
-      // Parse JSON-serialized complex fields (e.g. exercises array in Workout)
       const val = row[i];
-      if (typeof val === "string" && (val.startsWith("[") || val.startsWith("{"))) {
+      if (val instanceof Date) {
+        // Sheets returns date cells as JS Date objects — serialise to YYYY-MM-DD
+        const y = val.getFullYear();
+        const m = String(val.getMonth() + 1).padStart(2, "0");
+        const d = String(val.getDate()).padStart(2, "0");
+        obj[h] = y + "-" + m + "-" + d;
+      } else if (typeof val === "string" && (val.startsWith("[") || val.startsWith("{"))) {
+        // Parse JSON-serialised complex fields (e.g. exercises array in Workout)
         try { obj[h] = JSON.parse(val); } catch { obj[h] = val; }
       } else {
         obj[h] = val;
