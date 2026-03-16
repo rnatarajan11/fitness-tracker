@@ -122,54 +122,24 @@ export default function QuickAddChips({ onSelect }: Props) {
         </h3>
 
         <div className="flex items-center gap-2">
-          {/* New Quick Add button */}
+          {/* + New button */}
           <button
             onClick={toggleNew}
             aria-label={showNew ? "Close new quick-add form" : "New quick add"}
-            className="flex items-center gap-1 px-3 py-1.5 rounded-full text-xs font-semibold active:opacity-70 transition-opacity"
-            style={{
-              background: showNew ? "var(--surface-2)" : "var(--accent)",
-              color: "#fff",
-            }}
+            className="w-7 h-7 rounded-full flex items-center justify-center font-bold text-sm active:opacity-70 transition-opacity"
+            style={{ background: "var(--accent)", color: "#fff" }}
           >
-            {showNew ? (
-              <>
-                <svg width="10" height="10" viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round">
-                  <line x1="2" y1="2" x2="10" y2="10" /><line x1="10" y1="2" x2="2" y2="10" />
-                </svg>
-                Close
-              </>
-            ) : (
-              <>
-                <svg width="11" height="11" viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
-                  <line x1="6" y1="1" x2="6" y2="11" /><line x1="1" y1="6" x2="11" y2="6" />
-                </svg>
-                New
-              </>
-            )}
+            {showNew ? "×" : "+"}
           </button>
 
-          {/* Manage button */}
+          {/* M Manage button */}
           <button
             onClick={toggleManage}
             aria-label={showManage ? "Close manager" : "Manage quick adds"}
-            className="flex items-center gap-1 px-3 py-1.5 rounded-full text-xs font-semibold active:opacity-70 transition-opacity"
-            style={{
-              background: showManage ? "var(--accent)" : "var(--surface)",
-              color: showManage ? "#fff" : "var(--text-primary)",
-              border: showManage ? "none" : "1px solid var(--border)",
-            }}
+            className="w-7 h-7 rounded-full flex items-center justify-center font-bold text-sm active:opacity-70 transition-opacity"
+            style={{ background: "var(--accent)", color: "#fff" }}
           >
-            {showManage ? (
-              <>
-                <svg width="10" height="10" viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round">
-                  <line x1="2" y1="2" x2="10" y2="10" /><line x1="10" y1="2" x2="2" y2="10" />
-                </svg>
-                Close
-              </>
-            ) : (
-              "Manage"
-            )}
+            {showManage ? "×" : "M"}
           </button>
         </div>
       </div>
