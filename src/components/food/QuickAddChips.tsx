@@ -112,23 +112,31 @@ export default function QuickAddChips({ onSelect }: Props) {
         <button
           onClick={() => setShowManager((v) => !v)}
           aria-label={showManager ? "Close quick-add manager" : "Manage quick adds"}
-          className="flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium transition-colors active:opacity-60"
+          className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold active:opacity-70 transition-opacity"
           style={{
-            background: showManager ? "var(--surface-2)" : "var(--surface)",
-            color: showManager ? "var(--text-primary)" : "var(--text-secondary)",
-            border: "1px solid var(--border)",
+            background: showManager ? "var(--surface-2)" : "var(--accent)",
+            color: "#fff",
           }}
         >
-          {/* Sliders icon */}
-          <svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round">
-            <line x1="2" y1="4"  x2="14" y2="4"  />
-            <line x1="2" y1="8"  x2="14" y2="8"  />
-            <line x1="2" y1="12" x2="14" y2="12" />
-            <circle cx="5"  cy="4"  r="1.5" fill="var(--surface)" />
-            <circle cx="10" cy="8"  r="1.5" fill="var(--surface)" />
-            <circle cx="6"  cy="12" r="1.5" fill="var(--surface)" />
-          </svg>
-          Manage
+          {showManager ? (
+            <>
+              <svg width="11" height="11" viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round">
+                <line x1="2" y1="2" x2="10" y2="10" />
+                <line x1="10" y1="2" x2="2" y2="10" />
+              </svg>
+              Close
+            </>
+          ) : (
+            <>
+              <svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+                <path d="M2 4h2M8 4h6M2 8h6M12 8h2M2 12h4M10 12h4" />
+                <circle cx="5.5" cy="4"  r="1.5" fill="currentColor" stroke="none" />
+                <circle cx="9.5" cy="8"  r="1.5" fill="currentColor" stroke="none" />
+                <circle cx="7.5" cy="12" r="1.5" fill="currentColor" stroke="none" />
+              </svg>
+              Manage
+            </>
+          )}
         </button>
       </div>
 
