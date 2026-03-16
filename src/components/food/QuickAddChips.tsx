@@ -158,7 +158,7 @@ export default function QuickAddChips({ onSelect }: Props) {
                 No quick adds yet.
               </p>
             ) : (
-              <ul>
+              <ul style={{ maxHeight: 220, overflowY: "auto" }}>
                 {items.map((item, idx) => (
                   <li
                     key={item.label}
