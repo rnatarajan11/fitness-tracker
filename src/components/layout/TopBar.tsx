@@ -34,7 +34,7 @@ export default function TopBar() {
         className="flex items-center justify-center w-9 h-9 rounded-full font-bold text-sm transition-opacity hover:opacity-80 active:opacity-60"
         style={{ background: "var(--accent)", color: "#fff" }}
       >
-        U
+        RN
       </Link>
     </header>
   );

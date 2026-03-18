@@ -1,11 +1,10 @@
 // ─── Profile ───────────────────────────────────────────────────────────────
 export interface UserProfile {
-  name: string;
-  avatarUrl?: string;
-  heightCm: number;
-  goalWeightKg: number;
-  dailyCalorieGoal: number;
-  dailyStepGoal: number;
+  goalWeightLb:      number;
+  dailyCalorieGoal:  number;
+  dailyProteinGoal:  number; // grams
+  dailyCarbsGoal:    number; // grams
+  dailyFatGoal:      number; // grams
 }
 
 // ─── Food ──────────────────────────────────────────────────────────────────

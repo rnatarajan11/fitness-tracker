@@ -166,7 +166,7 @@ function setupSheets() {
     Weight:  ["id", "date", "weightKg", "note"],
     Workout: ["id", "date", "startTime", "durationMin", "exercises", "notes"],
     Walks:   ["id", "date", "durationMin", "speedMph", "incline"],
-    Profile: ["name", "avatarUrl", "heightCm", "goalWeightKg", "dailyCalorieGoal", "dailyStepGoal"],
+    Profile: ["goalWeightLb", "dailyCalorieGoal", "dailyProteinGoal", "dailyCarbsGoal", "dailyFatGoal"],
   };
 
   for (const [name, headers] of Object.entries(schemas)) {
