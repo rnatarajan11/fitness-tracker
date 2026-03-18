@@ -35,9 +35,7 @@ export async function POST(request: NextRequest) {
     const jsonBody = JSON.stringify(body);
     const headers = { "Content-Type": "application/json" };
 
-    // GAS web apps run doPost on the initial request then return a 302.
-    // We POST with redirect:manual to trigger doPost, then POST to the
-    // redirect URL to get the JSON response back.
+    // Step 1: POST with redirect:manual to capture the GAS redirect
     const probe = await fetch(GAS_URL, {
       method: "POST",
       redirect: "manual",
@@ -45,29 +43,27 @@ export async function POST(request: NextRequest) {
       body: jsonBody,
     });
 
-    // No redirect — response is inline (shouldn't happen with GAS but handle it)
-    if (probe.status < 300) {
+    const probeStatus = probe.status;
+    const location = probe.headers.get("location");
+
+    // No redirect — return inline response
+    if (probeStatus < 300) {
       const text = await probe.text();
-      if (!text.trimStart().startsWith("{") && !text.trimStart().startsWith("[")) {
-        return NextResponse.json({ ok: true });
-      }
-      return NextResponse.json(JSON.parse(text));
+      try { return NextResponse.json(JSON.parse(text)); }
+      catch { return NextResponse.json({ error: `GAS non-JSON (status ${probeStatus}): ${text.slice(0, 200)}` }, { status: 502 }); }
     }
 
-    // GAS redirected — doPost has run. POST to redirect URL to get the response.
-    const echoUrl = probe.headers.get("location") ?? GAS_URL;
-    try {
-      const res = await fetch(echoUrl, { method: "POST", headers, body: jsonBody });
-      const text = await res.text();
-      if (!text.trimStart().startsWith("{") && !text.trimStart().startsWith("[")) {
-        // Response isn't JSON but the write already happened — return ok
-        return NextResponse.json({ ok: true });
-      }
-      return NextResponse.json(JSON.parse(text));
-    } catch {
-      // Network error on echo fetch — write already happened
-      return NextResponse.json({ ok: true });
+    // Got a redirect but no location — unexpected
+    if (!location) {
+      return NextResponse.json({ error: `GAS returned ${probeStatus} with no Location header` }, { status: 502 });
     }
+
+    // Step 2: POST to the redirect URL to execute doPost
+    const res = await fetch(location, { method: "POST", headers, body: jsonBody });
+    const text = await res.text();
+    try { return NextResponse.json(JSON.parse(text)); }
+    catch { return NextResponse.json({ error: `GAS echo non-JSON (status ${res.status}): ${text.slice(0, 200)}` }, { status: 502 }); }
+
   } catch (err) {
     return NextResponse.json({ error: String(err) }, { status: 502 });
   }
