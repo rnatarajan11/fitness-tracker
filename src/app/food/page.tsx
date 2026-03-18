@@ -5,7 +5,6 @@ import { foodApi } from "@/lib/sheets";
 import type { FoodEntry } from "@/lib/types";
 import CalorieRing from "@/components/food/CalorieRing";
 import MacroCard from "@/components/food/MacroCard";
-import QuickAddChips from "@/components/food/QuickAddChips";
 import FoodLogEntry from "@/components/food/FoodLogEntry";
 import AddFoodModal from "@/components/food/AddFoodModal";
 
@@ -71,10 +70,10 @@ export default function FoodPage() {
     foodApi.add(entry).catch(console.error);
   }
 
-  async function handleDelete(id: string) {
-    await foodApi.delete(id);
+  function handleDelete(id: string) {
     setEntries((prev) => prev.filter((e) => e.id !== id));
     setExpandedId(null);
+    foodApi.delete(id).catch(console.error);
   }
 
   function openModal(data: Partial<FoodEntry> = {}) {
@@ -121,9 +120,6 @@ export default function FoodPage() {
           <MacroCard label="Carbs"   current={Math.round(totals.carbs)}   goal={GOALS.carbs}   color="#fbbf24" />
           <MacroCard label="Fat"     current={Math.round(totals.fat)}     goal={GOALS.fat}     color="#f87171" />
         </div>
-
-        {/* Quick add */}
-        <QuickAddChips onSelect={handleQuickAdd} />
 
         {/* Food log */}
         <div>
@@ -255,6 +251,7 @@ export default function FoodPage() {
             setPrefill({});
           }}
           onAdd={handleAdd}
+          onQuickAdd={handleQuickAdd}
         />
       )}
     </>

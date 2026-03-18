@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import type { FoodEntry } from "@/lib/types";
+import QuickAddChips from "@/components/food/QuickAddChips";
 
 const MEALS: { value: FoodEntry["meal"]; label: string }[] = [
   { value: "breakfast", label: "Breakfast" },
@@ -24,9 +25,10 @@ interface Props {
   prefill: Partial<FoodEntry>;
   onClose: () => void;
   onAdd: (entry: FoodEntry) => Promise<void>;
+  onQuickAdd?: (data: Partial<FoodEntry>) => void;
 }
 
-export default function AddFoodModal({ prefill, onClose, onAdd }: Props) {
+export default function AddFoodModal({ prefill, onClose, onAdd, onQuickAdd }: Props) {
   const [form, setForm] = useState({
     name:     prefill.name     ?? "",
     meal:     prefill.meal     ?? ("snack" as FoodEntry["meal"]),
@@ -106,6 +108,18 @@ export default function AddFoodModal({ prefill, onClose, onAdd }: Props) {
           >
             Log Food
           </h2>
+
+          {/* Quick add chips */}
+          {onQuickAdd && (
+            <div className="mb-5">
+              <QuickAddChips
+                onSelect={(data) => {
+                  onQuickAdd(data);
+                  onClose();
+                }}
+              />
+            </div>
+          )}
 
           {/* Food name */}
           <input
