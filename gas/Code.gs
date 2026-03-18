@@ -165,7 +165,7 @@ function setupSheets() {
     Food:    ["id", "date", "time", "name", "calories", "protein", "carbs", "fat", "meal"],
     Weight:  ["id", "date", "weightKg", "note"],
     Workout: ["id", "date", "startTime", "durationMin", "exercises", "notes"],
-    Walks:   ["id", "date", "startTime", "durationMin", "distanceKm", "steps", "calories", "route"],
+    Walks:   ["id", "date", "durationMin", "speedMph", "incline"],
     Profile: ["name", "avatarUrl", "heightCm", "goalWeightKg", "dailyCalorieGoal", "dailyStepGoal"],
   };
 

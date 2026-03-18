@@ -58,13 +58,10 @@ export interface WorkoutEntry {
 // ─── Walks ─────────────────────────────────────────────────────────────────
 export interface WalkEntry {
   id: string;
-  date: string;   // ISO YYYY-MM-DD
-  startTime: string;
+  date: string;      // ISO YYYY-MM-DD
   durationMin: number;
-  distanceKm: number;
-  steps: number;
-  calories?: number;
-  route?: string;
+  speedMph?: number; // defaults to 3 if absent
+  incline?: number;  // percent grade, optional
 }
 
 // ─── Google Sheets API ─────────────────────────────────────────────────────

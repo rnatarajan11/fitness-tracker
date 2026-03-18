@@ -18,10 +18,9 @@ interface Props {
 export default function AddWalkModal({ onClose, onAdd }: Props) {
   const [form, setForm] = useState({
     date:        todayISO(),
-    steps:       "",
     durationMin: "",
-    distance:    "",
-    route:       "",
+    speedMph:    "",
+    incline:     "",
   });
   const [submitting, setSubmitting] = useState(false);
 
@@ -29,7 +28,7 @@ export default function AddWalkModal({ onClose, onAdd }: Props) {
     setForm((f) => ({ ...f, [key]: val }));
   }
 
-  const isValid = Number(form.steps) > 0;
+  const isValid = Number(form.durationMin) > 0;
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -38,11 +37,9 @@ export default function AddWalkModal({ onClose, onAdd }: Props) {
     onAdd({
       id:          newId(),
       date:        form.date,
-      startTime:   "",
-      durationMin: Number(form.durationMin) || 0,
-      distanceKm:  Number(form.distance)    || 0,
-      steps:       Number(form.steps),
-      route:       form.route.trim() || undefined,
+      durationMin: Number(form.durationMin),
+      speedMph:    form.speedMph  ? Number(form.speedMph)  : undefined,
+      incline:     form.incline   ? Number(form.incline)   : undefined,
     });
   }
 
@@ -69,50 +66,51 @@ export default function AddWalkModal({ onClose, onAdd }: Props) {
             Log Walk
           </h2>
 
-          {/* Steps — large center */}
+          {/* Duration — large center */}
           <div className="mb-4">
             <label className="text-xs font-medium mb-1.5 block" style={{ color: "var(--text-secondary)" }}>
-              Steps
+              Duration (min)
             </label>
             <input
               type="number"
               inputMode="numeric"
               placeholder="0"
-              value={form.steps}
-              onChange={(e) => field("steps", e.target.value)}
+              value={form.durationMin}
+              onChange={(e) => field("durationMin", e.target.value)}
               autoFocus
               className="w-full rounded-xl px-4 py-3 text-3xl font-bold text-center outline-none tabular-nums"
               style={{ background: "var(--surface-2)", color: "var(--text-primary)", border: "1px solid var(--border)" }}
             />
           </div>
 
-          {/* Duration + Distance */}
+          {/* Speed + Incline */}
           <div className="flex gap-3 mb-4">
             <div className="flex-1">
               <label className="text-xs font-medium mb-1.5 block" style={{ color: "var(--text-secondary)" }}>
-                Duration (min)
+                Speed (mph)
               </label>
               <input
                 type="number"
-                inputMode="numeric"
-                placeholder="0"
-                value={form.durationMin}
-                onChange={(e) => field("durationMin", e.target.value)}
+                inputMode="decimal"
+                step="0.1"
+                placeholder="3.0"
+                value={form.speedMph}
+                onChange={(e) => field("speedMph", e.target.value)}
                 className="w-full rounded-xl px-3 py-2.5 text-base text-center outline-none"
                 style={{ background: "var(--surface-2)", color: "var(--text-primary)", border: "1px solid var(--border)" }}
               />
             </div>
             <div className="flex-1">
               <label className="text-xs font-medium mb-1.5 block" style={{ color: "var(--text-secondary)" }}>
-                Distance (mi)
+                Incline (%)
               </label>
               <input
                 type="number"
                 inputMode="decimal"
-                step="0.01"
-                placeholder="0.0"
-                value={form.distance}
-                onChange={(e) => field("distance", e.target.value)}
+                step="0.5"
+                placeholder="0"
+                value={form.incline}
+                onChange={(e) => field("incline", e.target.value)}
                 className="w-full rounded-xl px-3 py-2.5 text-base text-center outline-none"
                 style={{ background: "var(--surface-2)", color: "var(--text-primary)", border: "1px solid var(--border)" }}
               />
@@ -120,7 +118,7 @@ export default function AddWalkModal({ onClose, onAdd }: Props) {
           </div>
 
           {/* Date */}
-          <div className="mb-4">
+          <div className="mb-7">
             <label className="text-xs font-medium mb-1.5 block" style={{ color: "var(--text-secondary)" }}>
               Date
             </label>
@@ -130,21 +128,6 @@ export default function AddWalkModal({ onClose, onAdd }: Props) {
               onChange={(e) => field("date", e.target.value)}
               className="w-full rounded-xl px-4 py-2.5 text-base outline-none"
               style={{ background: "var(--surface-2)", color: "var(--text-primary)", border: "1px solid var(--border)", colorScheme: "dark" }}
-            />
-          </div>
-
-          {/* Route */}
-          <div className="mb-7">
-            <label className="text-xs font-medium mb-1.5 block" style={{ color: "var(--text-secondary)" }}>
-              Route (optional)
-            </label>
-            <input
-              type="text"
-              placeholder="Park loop, neighbourhood…"
-              value={form.route}
-              onChange={(e) => field("route", e.target.value)}
-              className="w-full rounded-xl px-4 py-3 text-base outline-none"
-              style={{ background: "var(--surface-2)", color: "var(--text-primary)", border: "1px solid var(--border)" }}
             />
           </div>
 

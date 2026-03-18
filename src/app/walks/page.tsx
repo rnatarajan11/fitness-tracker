@@ -5,12 +5,21 @@ import { walksApi } from "@/lib/sheets";
 import type { WalkEntry } from "@/lib/types";
 import AddWalkModal from "@/components/walks/AddWalkModal";
 
+const DEFAULT_SPEED_MPH = 3;
+const STEPS_PER_MILE    = 2000;
+
+function calcMiles(entry: WalkEntry) {
+  return (entry.durationMin / 60) * (Number(entry.speedMph) || DEFAULT_SPEED_MPH);
+}
+function calcSteps(entry: WalkEntry) {
+  return Math.round(calcMiles(entry) * STEPS_PER_MILE);
+}
+
 function todayISO() { return new Date().toLocaleDateString("en-CA"); }
 
 function formatDate(dateStr: string) {
   const d = new Date(dateStr + "T00:00:00");
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
+  const today = new Date(); today.setHours(0, 0, 0, 0);
   if (d.getTime() === today.getTime()) return "Today";
   return d.toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric" });
 }
@@ -57,8 +66,9 @@ export default function WalksPage() {
     () => entries.filter((e) => String(e.date).slice(0, 10) === today),
     [entries, today]
   );
-  const todaySteps    = todayEntries.reduce((s, e) => s + Number(e.steps), 0);
-  const todayDistance = todayEntries.reduce((s, e) => s + Number(e.distanceKm), 0);
+
+  const todaySteps    = todayEntries.reduce((s, e) => s + calcSteps(e), 0);
+  const todayMiles    = todayEntries.reduce((s, e) => s + calcMiles(e), 0);
   const todayDuration = todayEntries.reduce((s, e) => s + Number(e.durationMin), 0);
 
   return (
@@ -92,31 +102,21 @@ export default function WalksPage() {
               </span>
             </div>
 
-            {/* Today's stats — only show if something logged */}
+            {/* Today's stats */}
             {todayEntries.length > 0 && (
               <div className="flex gap-3">
-                {todayDistance > 0 && (
-                  <div
-                    className="flex-1 rounded-2xl p-3 text-center"
-                    style={{ background: "var(--surface)" }}
-                  >
-                    <div className="text-xl font-bold tabular-nums" style={{ color: "var(--text-primary)" }}>
-                      {todayDistance.toFixed(2)}
-                    </div>
-                    <div className="text-xs" style={{ color: "var(--text-secondary)" }}>mi today</div>
+                <div className="flex-1 rounded-2xl p-3 text-center" style={{ background: "var(--surface)" }}>
+                  <div className="text-xl font-bold tabular-nums" style={{ color: "var(--text-primary)" }}>
+                    {todayMiles.toFixed(2)}
                   </div>
-                )}
-                {todayDuration > 0 && (
-                  <div
-                    className="flex-1 rounded-2xl p-3 text-center"
-                    style={{ background: "var(--surface)" }}
-                  >
-                    <div className="text-xl font-bold tabular-nums" style={{ color: "var(--text-primary)" }}>
-                      {todayDuration}
-                    </div>
-                    <div className="text-xs" style={{ color: "var(--text-secondary)" }}>min today</div>
+                  <div className="text-xs" style={{ color: "var(--text-secondary)" }}>mi today</div>
+                </div>
+                <div className="flex-1 rounded-2xl p-3 text-center" style={{ background: "var(--surface)" }}>
+                  <div className="text-xl font-bold tabular-nums" style={{ color: "var(--text-primary)" }}>
+                    {todayDuration}
                   </div>
-                )}
+                  <div className="text-xs" style={{ color: "var(--text-secondary)" }}>min today</div>
+                </div>
               </div>
             )}
 
@@ -129,26 +129,27 @@ export default function WalksPage() {
               </p>
             )}
 
-            {/* Walk history */}
+            {/* History */}
             {entries.length > 0 && (
               <div>
-                <h3
-                  className="text-xs font-semibold mb-2 px-1"
-                  style={{ color: "var(--text-secondary)" }}
-                >
+                <h3 className="text-xs font-semibold mb-2 px-1" style={{ color: "var(--text-secondary)" }}>
                   History
                 </h3>
                 <div className="rounded-2xl overflow-hidden" style={{ background: "var(--surface)" }}>
                   {entries.map((entry, idx) => {
-                    const isExpanded = expandedId === entry.id;
+                    const isExpanded  = expandedId === entry.id;
                     const prevExpanded = idx > 0 && expandedId === entries[idx - 1].id;
-                    const label = formatDate(String(entry.date).slice(0, 10));
-                    const isToday = label === "Today";
+                    const label       = formatDate(String(entry.date).slice(0, 10));
+                    const isToday     = label === "Today";
+                    const miles       = calcMiles(entry);
+                    const steps       = calcSteps(entry);
+                    const speed       = Number(entry.speedMph) || DEFAULT_SPEED_MPH;
 
                     const meta = [
-                      Number(entry.durationMin) > 0 && `${entry.durationMin} min`,
-                      Number(entry.distanceKm)  > 0 && `${Number(entry.distanceKm).toFixed(2)} mi`,
-                      entry.route,
+                      `${entry.durationMin} min`,
+                      `${miles.toFixed(2)} mi`,
+                      speed !== DEFAULT_SPEED_MPH && `${speed} mph`,
+                      Number(entry.incline) > 0 && `${entry.incline}% incline`,
                     ].filter(Boolean).join(" · ");
 
                     return (
@@ -163,13 +164,11 @@ export default function WalksPage() {
                         >
                           <div className="flex-1">
                             <div className="text-base font-semibold tabular-nums" style={{ color: "var(--text-primary)" }}>
-                              {Number(entry.steps).toLocaleString()} steps
+                              {steps.toLocaleString()} steps
                             </div>
-                            {meta && (
-                              <div className="text-xs mt-0.5" style={{ color: "var(--text-secondary)" }}>
-                                {meta}
-                              </div>
-                            )}
+                            <div className="text-xs mt-0.5" style={{ color: "var(--text-secondary)" }}>
+                              {meta}
+                            </div>
                           </div>
                           <div
                             className="text-sm ml-3 flex-none"
@@ -180,10 +179,7 @@ export default function WalksPage() {
                         </button>
 
                         {isExpanded && (
-                          <div
-                            className="flex gap-2 px-4 py-2.5"
-                            style={{ borderTop: "1px solid var(--border)" }}
-                          >
+                          <div className="flex gap-2 px-4 py-2.5" style={{ borderTop: "1px solid var(--border)" }}>
                             <button
                               onClick={() => setExpandedId(null)}
                               className="flex-1 py-2.5 rounded-xl text-sm font-medium active:opacity-70"
