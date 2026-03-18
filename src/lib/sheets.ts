@@ -39,7 +39,10 @@ async function gasPost<T>(
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ action, ...payload }),
   });
-  if (!res.ok) throw new Error(`Sheets proxy error: ${res.status}`);
+  if (!res.ok) {
+    const body = await res.json().catch(() => ({}));
+    throw new Error(body?.error ?? `Sheets proxy error: ${res.status}`);
+  }
   const json = await res.json();
   if (json?.error) throw new Error(json.error);
   return json as T;
