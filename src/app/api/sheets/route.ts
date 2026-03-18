@@ -39,20 +39,25 @@ export async function POST(request: NextRequest) {
     // by converting POST→GET (RFC 7231), which drops the body and calls
     // doGet instead of doPost. Fix: capture the redirect target manually,
     // then POST directly to that URL so the body is preserved.
-    let targetUrl = GAS_URL;
     const probe = await fetch(GAS_URL, {
       method: "POST",
       redirect: "manual",
       headers,
       body: jsonBody,
     });
-    if (probe.status >= 300 && probe.status < 400) {
-      targetUrl = probe.headers.get("location") ?? GAS_URL;
+
+    // If no redirect, the probe response itself contains the result
+    if (probe.status < 300) {
+      const text = await probe.text();
+      if (!text.trimStart().startsWith("{") && !text.trimStart().startsWith("[")) {
+        throw new Error(`GAS returned non-JSON response: ${text.slice(0, 120)}`);
+      }
+      return NextResponse.json(JSON.parse(text));
     }
 
+    const targetUrl = probe.headers.get("location") ?? GAS_URL;
     const res = await fetch(targetUrl, { method: "POST", headers, body: jsonBody });
     const text = await res.text();
-    // Guard against GAS returning an HTML error page instead of JSON
     if (!text.trimStart().startsWith("{") && !text.trimStart().startsWith("[")) {
       throw new Error(`GAS returned non-JSON response: ${text.slice(0, 120)}`);
     }
