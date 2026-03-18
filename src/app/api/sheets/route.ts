@@ -35,10 +35,8 @@ export async function POST(request: NextRequest) {
     const jsonBody = JSON.stringify(body);
     const headers = { "Content-Type": "application/json" };
 
-    // GAS web apps return a 302 redirect on POST. Node's fetch follows 302
-    // by converting POST→GET (RFC 7231), which drops the body and calls
-    // doGet instead of doPost. Fix: capture the redirect target manually,
-    // then POST directly to that URL so the body is preserved.
+    // GAS web apps process the POST then return a 302 to an echo URL.
+    // Capture the redirect manually so we can GET the echo URL for the response.
     const probe = await fetch(GAS_URL, {
       method: "POST",
       redirect: "manual",
@@ -46,20 +44,21 @@ export async function POST(request: NextRequest) {
       body: jsonBody,
     });
 
-    // If no redirect, the probe response itself contains the result
+    // No redirect — response is inline
     if (probe.status < 300) {
       const text = await probe.text();
       if (!text.trimStart().startsWith("{") && !text.trimStart().startsWith("[")) {
-        throw new Error(`GAS returned non-JSON response: ${text.slice(0, 120)}`);
+        throw new Error(`GAS returned non-JSON: ${text.slice(0, 120)}`);
       }
       return NextResponse.json(JSON.parse(text));
     }
 
-    const targetUrl = probe.headers.get("location") ?? GAS_URL;
-    const res = await fetch(targetUrl, { method: "POST", headers, body: jsonBody });
+    // Follow redirect with GET to retrieve the JSON echo response
+    const echoUrl = probe.headers.get("location") ?? GAS_URL;
+    const res = await fetch(echoUrl, { method: "GET" });
     const text = await res.text();
     if (!text.trimStart().startsWith("{") && !text.trimStart().startsWith("[")) {
-      throw new Error(`GAS returned non-JSON response: ${text.slice(0, 120)}`);
+      throw new Error(`GAS echo returned non-JSON: ${text.slice(0, 120)}`);
     }
     return NextResponse.json(JSON.parse(text));
   } catch (err) {
