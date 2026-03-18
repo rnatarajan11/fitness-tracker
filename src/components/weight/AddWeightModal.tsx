@@ -64,7 +64,7 @@ export default function AddWeightModal({ onClose, onAdd, onEdit, entry }: Props)
           <div className="w-10 h-1 rounded-full" style={{ background: "var(--border)" }} />
         </div>
 
-        <form onSubmit={handleSubmit} className="overflow-y-auto px-5 pb-10 flex-1">
+        <form id="weight-form" onSubmit={handleSubmit} className="overflow-y-auto px-5 pb-4 flex-1">
           <h2
             className="text-lg font-semibold mt-2 mb-4"
             style={{ color: "var(--text-primary)" }}
@@ -141,18 +141,21 @@ export default function AddWeightModal({ onClose, onAdd, onEdit, entry }: Props)
             />
           </div>
 
+        </form>
+        <div
+          className="flex-none px-5 pt-3"
+          style={{ paddingBottom: "max(env(safe-area-inset-bottom), 20px)", borderTop: "1px solid var(--border)" }}
+        >
           <button
             type="submit"
+            form="weight-form"
             disabled={!isValid || submitting}
             className="w-full py-4 rounded-2xl font-semibold text-white transition-opacity"
-            style={{
-              background: "var(--accent)",
-              opacity: !isValid || submitting ? 0.45 : 1,
-            }}
+            style={{ background: "var(--accent)", opacity: !isValid || submitting ? 0.45 : 1 }}
           >
             {submitting ? "Saving…" : editMode ? "Save Changes" : "Log Weight"}
           </button>
-        </form>
+        </div>
       </div>
     </div>
   );

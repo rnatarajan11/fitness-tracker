@@ -188,7 +188,8 @@ export default function AddWorkoutModal({ onClose, onAdd }: Props) {
 
         {/* ── Step 2 ── */}
         {step === 2 && (
-          <div className="overflow-y-auto flex-1 px-5 pb-10">
+          <>
+          <div className="overflow-y-auto flex-1 px-5 pb-4">
 
             {/* Exercise list */}
             {exercises.length > 0 && (
@@ -369,6 +370,11 @@ export default function AddWorkoutModal({ onClose, onAdd }: Props) {
               </button>
             )}
 
+          </div>
+          <div
+            className="flex-none px-5 pt-3"
+            style={{ paddingBottom: "max(env(safe-area-inset-bottom), 20px)", borderTop: "1px solid var(--border)" }}
+          >
             <button
               onClick={handleSubmit}
               disabled={submitting}
@@ -380,6 +386,7 @@ export default function AddWorkoutModal({ onClose, onAdd }: Props) {
                 : `Log Workout${exercises.length ? ` · ${exercises.length} exercise${exercises.length !== 1 ? "s" : ""}` : ""}`}
             </button>
           </div>
+          </>
         )}
       </div>
     </div>

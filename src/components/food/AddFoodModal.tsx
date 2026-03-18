@@ -96,7 +96,8 @@ export default function AddFoodModal({ prefill, onClose, onAdd, onQuickAdd }: Pr
         {/* Scrollable form body */}
         <form
           onSubmit={handleSubmit}
-          className="overflow-y-auto px-5 pb-10 flex-1"
+          id="food-form"
+          className="overflow-y-auto px-5 pb-4 flex-1"
         >
           <h2
             className="text-lg font-semibold mt-2 mb-4"
@@ -215,19 +216,21 @@ export default function AddFoodModal({ prefill, onClose, onAdd, onQuickAdd }: Pr
             />
           </div>
 
-          {/* Submit */}
+        </form>
+        <div
+          className="flex-none px-5 pt-3"
+          style={{ paddingBottom: "max(env(safe-area-inset-bottom), 20px)", borderTop: "1px solid var(--border)" }}
+        >
           <button
             type="submit"
+            form="food-form"
             disabled={!isValid || submitting}
             className="w-full py-4 rounded-2xl font-semibold text-white transition-opacity"
-            style={{
-              background: "var(--accent)",
-              opacity: !isValid || submitting ? 0.45 : 1,
-            }}
+            style={{ background: "var(--accent)", opacity: !isValid || submitting ? 0.45 : 1 }}
           >
             {submitting ? "Saving…" : "Log Food"}
           </button>
-        </form>
+        </div>
       </div>
     </div>
   );
