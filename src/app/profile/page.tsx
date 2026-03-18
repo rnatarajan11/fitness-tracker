@@ -8,8 +8,6 @@ const DEFAULTS: UserProfile = {
   goalWeightLb:     175,
   dailyCalorieGoal: 2000,
   dailyProteinGoal: 150,
-  dailyCarbsGoal:   200,
-  dailyFatGoal:     65,
 };
 
 export default function ProfilePage() {
@@ -106,31 +104,21 @@ export default function ProfilePage() {
         />
       </div>
 
-      {/* Macro goals */}
+      {/* Protein goal */}
       <div>
-        <label className="text-xs font-medium mb-2 block" style={{ color: "var(--text-secondary)" }}>
-          Daily macro goals (g)
+        <label className="text-xs font-medium mb-1.5 block" style={{ color: "var(--text-secondary)" }}>
+          Daily protein goal (g)
         </label>
-        <div className="flex gap-3">
-          {(["dailyProteinGoal", "dailyCarbsGoal", "dailyFatGoal"] as const).map((key) => {
-            const label = key === "dailyProteinGoal" ? "Protein" : key === "dailyCarbsGoal" ? "Carbs" : "Fat";
-            return (
-              <div key={key} className="flex-1">
-                <div className="text-xs mb-1 text-center" style={{ color: "var(--text-secondary)" }}>{label}</div>
-                <div className="relative">
-                  <input
-                    type="number"
-                    inputMode="numeric"
-                    value={form[key] || ""}
-                    onChange={(e) => field(key, e.target.value)}
-                    className="w-full rounded-xl px-3 py-2.5 text-base text-center outline-none"
-                    style={{ background: "var(--surface)", color: "var(--text-primary)", border: "1px solid var(--border)" }}
-                  />
-                  <span className="absolute right-2.5 top-1/2 -translate-y-1/2 text-xs pointer-events-none" style={{ color: "var(--text-secondary)" }}>g</span>
-                </div>
-              </div>
-            );
-          })}
+        <div className="relative">
+          <input
+            type="number"
+            inputMode="numeric"
+            value={form.dailyProteinGoal || ""}
+            onChange={(e) => field("dailyProteinGoal", e.target.value)}
+            className="w-full rounded-xl px-4 py-3 text-base outline-none"
+            style={{ background: "var(--surface)", color: "var(--text-primary)", border: "1px solid var(--border)" }}
+          />
+          <span className="absolute right-4 top-1/2 -translate-y-1/2 text-sm pointer-events-none" style={{ color: "var(--text-secondary)" }}>g</span>
         </div>
       </div>
 

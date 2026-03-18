@@ -38,7 +38,7 @@ export default function FoodLogEntry({
             className="text-xs mt-0.5 tabular-nums"
             style={{ color: "var(--text-secondary)" }}
           >
-            P {entry.protein}g · C {entry.carbs}g · F {entry.fat}g
+            P {entry.protein}g
           </div>
         </div>
 

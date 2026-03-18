@@ -162,11 +162,11 @@ function setupSheets() {
   const ss = SpreadsheetApp.getActiveSpreadsheet();
 
   const schemas = {
-    Food:    ["id", "date", "time", "name", "calories", "protein", "carbs", "fat", "meal"],
+    Food:    ["id", "date", "time", "name", "calories", "protein", "meal"],
     Weight:  ["id", "date", "weightKg", "note"],
     Workout: ["id", "date", "startTime", "durationMin", "exercises", "notes"],
     Walks:   ["id", "date", "durationMin", "speedMph", "incline"],
-    Profile: ["goalWeightLb", "dailyCalorieGoal", "dailyProteinGoal", "dailyCarbsGoal", "dailyFatGoal"],
+    Profile: ["goalWeightLb", "dailyCalorieGoal", "dailyProteinGoal"],
   };
 
   for (const [name, headers] of Object.entries(schemas)) {

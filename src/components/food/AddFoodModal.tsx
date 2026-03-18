@@ -34,8 +34,6 @@ export default function AddFoodModal({ prefill, onClose, onAdd, onQuickAdd }: Pr
     meal:     prefill.meal     ?? ("snack" as FoodEntry["meal"]),
     calories: prefill.calories != null ? String(prefill.calories) : "",
     protein:  prefill.protein  != null ? String(prefill.protein)  : "",
-    carbs:    prefill.carbs    != null ? String(prefill.carbs)    : "",
-    fat:      prefill.fat      != null ? String(prefill.fat)      : "",
     time:     nowTime(),
   });
   const [submitting, setSubmitting] = useState(false);
@@ -56,9 +54,7 @@ export default function AddFoodModal({ prefill, onClose, onAdd, onQuickAdd }: Pr
       time:     form.time,
       name:     form.name.trim(),
       calories: Number(form.calories),
-      protein:  Number(form.protein)  || 0,
-      carbs:    Number(form.carbs)    || 0,
-      fat:      Number(form.fat)      || 0,
+      protein:  Number(form.protein) || 0,
       meal:     form.meal,
     };
 
@@ -178,39 +174,23 @@ export default function AddFoodModal({ prefill, onClose, onAdd, onQuickAdd }: Pr
             />
           </div>
 
-          {/* Macros row */}
-          <div className="flex gap-3 mb-4">
-            {(["protein", "carbs", "fat"] as const).map((macro) => (
-              <div key={macro} className="flex-1">
-                <label
-                  className="text-xs font-medium mb-1.5 block capitalize"
-                  style={{ color: "var(--text-secondary)" }}
-                >
-                  {macro}
-                </label>
-                <div className="relative">
-                  <input
-                    type="number"
-                    inputMode="decimal"
-                    placeholder="0"
-                    value={form[macro]}
-                    onChange={(e) => field(macro, e.target.value)}
-                    className="w-full rounded-xl px-3 py-2.5 text-base text-center outline-none"
-                    style={{
-                      background: "var(--surface-2)",
-                      color: "var(--text-primary)",
-                      border: "1px solid var(--border)",
-                    }}
-                  />
-                  <span
-                    className="absolute right-2.5 top-1/2 -translate-y-1/2 text-xs pointer-events-none"
-                    style={{ color: "var(--text-secondary)" }}
-                  >
-                    g
-                  </span>
-                </div>
-              </div>
-            ))}
+          {/* Protein */}
+          <div className="mb-4">
+            <label className="text-xs font-medium mb-1.5 block" style={{ color: "var(--text-secondary)" }}>
+              Protein
+            </label>
+            <div className="relative">
+              <input
+                type="number"
+                inputMode="decimal"
+                placeholder="0"
+                value={form.protein}
+                onChange={(e) => field("protein", e.target.value)}
+                className="w-full rounded-xl px-3 py-2.5 text-base text-center outline-none"
+                style={{ background: "var(--surface-2)", color: "var(--text-primary)", border: "1px solid var(--border)" }}
+              />
+              <span className="absolute right-2.5 top-1/2 -translate-y-1/2 text-xs pointer-events-none" style={{ color: "var(--text-secondary)" }}>g</span>
+            </div>
           </div>
 
           {/* Time */}

@@ -1,10 +1,8 @@
 // ─── Profile ───────────────────────────────────────────────────────────────
 export interface UserProfile {
-  goalWeightLb:      number;
-  dailyCalorieGoal:  number;
-  dailyProteinGoal:  number; // grams
-  dailyCarbsGoal:    number; // grams
-  dailyFatGoal:      number; // grams
+  goalWeightLb:     number;
+  dailyCalorieGoal: number;
+  dailyProteinGoal: number; // grams
 }
 
 // ─── Food ──────────────────────────────────────────────────────────────────
@@ -15,8 +13,6 @@ export interface FoodEntry {
   name: string;
   calories: number;
   protein: number; // grams
-  carbs: number;   // grams
-  fat: number;     // grams
   meal: "breakfast" | "lunch" | "dinner" | "snack";
 }
 
