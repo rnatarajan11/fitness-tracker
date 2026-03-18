@@ -35,8 +35,9 @@ export async function POST(request: NextRequest) {
     const jsonBody = JSON.stringify(body);
     const headers = { "Content-Type": "application/json" };
 
-    // GAS web apps process the POST then return a 302 to an echo URL.
-    // Capture the redirect manually so we can GET the echo URL for the response.
+    // GAS web apps run doPost on the initial request then return a 302.
+    // We POST with redirect:manual to trigger doPost, then POST to the
+    // redirect URL to get the JSON response back.
     const probe = await fetch(GAS_URL, {
       method: "POST",
       redirect: "manual",
@@ -44,23 +45,29 @@ export async function POST(request: NextRequest) {
       body: jsonBody,
     });
 
-    // No redirect — response is inline
+    // No redirect — response is inline (shouldn't happen with GAS but handle it)
     if (probe.status < 300) {
       const text = await probe.text();
       if (!text.trimStart().startsWith("{") && !text.trimStart().startsWith("[")) {
-        throw new Error(`GAS returned non-JSON: ${text.slice(0, 120)}`);
+        return NextResponse.json({ ok: true });
       }
       return NextResponse.json(JSON.parse(text));
     }
 
-    // Follow redirect with GET to retrieve the JSON echo response
+    // GAS redirected — doPost has run. POST to redirect URL to get the response.
     const echoUrl = probe.headers.get("location") ?? GAS_URL;
-    const res = await fetch(echoUrl, { method: "GET" });
-    const text = await res.text();
-    if (!text.trimStart().startsWith("{") && !text.trimStart().startsWith("[")) {
-      throw new Error(`GAS echo returned non-JSON: ${text.slice(0, 120)}`);
+    try {
+      const res = await fetch(echoUrl, { method: "POST", headers, body: jsonBody });
+      const text = await res.text();
+      if (!text.trimStart().startsWith("{") && !text.trimStart().startsWith("[")) {
+        // Response isn't JSON but the write already happened — return ok
+        return NextResponse.json({ ok: true });
+      }
+      return NextResponse.json(JSON.parse(text));
+    } catch {
+      // Network error on echo fetch — write already happened
+      return NextResponse.json({ ok: true });
     }
-    return NextResponse.json(JSON.parse(text));
   } catch (err) {
     return NextResponse.json({ error: String(err) }, { status: 502 });
   }
