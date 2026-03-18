@@ -12,8 +12,11 @@ import type {
   SheetName,
 } from "./types";
 
-// Always use the local proxy route (works from any client component)
-const BASE = "/api/sheets";
+// Reads go through the server-side proxy (avoids CORS on GET).
+// Writes go directly from the browser to GAS using no-cors POST —
+// this avoids Vercel datacenter IPs being blocked by Google for POSTs.
+const PROXY = "/api/sheets";
+const GAS_DIRECT = process.env.NEXT_PUBLIC_SHEETS_API_URL ?? "";
 
 async function gasGet<T>(
   action: string,
@@ -23,7 +26,7 @@ async function gasGet<T>(
     action,
     payload: JSON.stringify(params),
   });
-  const res = await fetch(`${BASE}?${qs}`, { cache: "no-store" });
+  const res = await fetch(`${PROXY}?${qs}`, { cache: "no-store" });
   if (!res.ok) throw new Error(`Sheets proxy error: ${res.status}`);
   const json = await res.json();
   if (json?.error) throw new Error(json.error);
@@ -34,18 +37,16 @@ async function gasPost<T>(
   action: string,
   payload: Record<string, unknown>
 ): Promise<T> {
-  const res = await fetch(BASE, {
+  if (!GAS_DIRECT) throw new Error("GAS URL not configured");
+  // Content-Type text/plain avoids CORS preflight; GAS reads via e.postData.contents
+  await fetch(GAS_DIRECT, {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
+    mode: "no-cors",
+    headers: { "Content-Type": "text/plain" },
     body: JSON.stringify({ action, ...payload }),
   });
-  if (!res.ok) {
-    const body = await res.json().catch(() => ({}));
-    throw new Error(body?.error ?? `Sheets proxy error: ${res.status}`);
-  }
-  const json = await res.json();
-  if (json?.error) throw new Error(json.error);
-  return json as T;
+  // Response is opaque with no-cors — rely on optimistic UI updates
+  return { ok: true } as unknown as T;
 }
 
 // ─── Generic helpers ────────────────────────────────────────────────────────
