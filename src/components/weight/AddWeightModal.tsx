@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import type { WeightEntry } from "@/lib/types";
 
 function todayISO() {
@@ -28,16 +28,6 @@ export default function AddWeightModal({ onClose, onAdd, onEdit, entry }: Props)
     note:     entry?.note ?? "",
   });
   const [submitting, setSubmitting] = useState(false);
-  const [maxHeight,  setMaxHeight]  = useState("92dvh");
-
-  useEffect(() => {
-    const vv = window.visualViewport;
-    if (!vv) return;
-    const update = () => setMaxHeight(`${vv.height * 0.92}px`);
-    vv.addEventListener("resize", update);
-    update();
-    return () => vv.removeEventListener("resize", update);
-  }, []);
 
   function field(key: keyof typeof form, value: string) {
     setForm((f) => ({ ...f, [key]: value }));
@@ -68,7 +58,7 @@ export default function AddWeightModal({ onClose, onAdd, onEdit, entry }: Props)
       />
       <div
         className="relative rounded-t-3xl flex flex-col"
-        style={{ background: "var(--surface)", maxHeight }}
+        style={{ background: "var(--surface)", maxHeight: "92dvh" }}
       >
         <div className="flex justify-center pt-3 pb-1 flex-none">
           <div className="w-10 h-1 rounded-full" style={{ background: "var(--border)" }} />

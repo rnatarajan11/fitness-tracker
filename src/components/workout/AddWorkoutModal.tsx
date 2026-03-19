@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import type { WorkoutEntry, Exercise, ExerciseSet } from "@/lib/types";
 
 function todayISO() { return new Date().toLocaleDateString("en-CA"); }
@@ -34,16 +34,6 @@ export default function AddWorkoutModal({ onClose, onAdd }: Props) {
   const [addingEx,    setAddingEx]    = useState(false);
   const [newExName,   setNewExName]   = useState("");
   const [submitting,  setSubmitting]  = useState(false);
-  const [maxHeight,   setMaxHeight]   = useState("92dvh");
-
-  useEffect(() => {
-    const vv = window.visualViewport;
-    if (!vv) return;
-    const update = () => setMaxHeight(`${vv.height * 0.92}px`);
-    vv.addEventListener("resize", update);
-    update();
-    return () => vv.removeEventListener("resize", update);
-  }, []);
 
   function metaField(key: keyof typeof meta, val: string) {
     setMeta((m) => ({ ...m, [key]: val }));
@@ -129,7 +119,7 @@ export default function AddWorkoutModal({ onClose, onAdd }: Props) {
       />
       <div
         className="relative rounded-t-3xl flex flex-col"
-        style={{ background: "var(--surface)", maxHeight }}
+        style={{ background: "var(--surface)", maxHeight: "92dvh" }}
       >
         {/* Drag handle */}
         <div className="flex justify-center pt-3 pb-1 flex-none">
@@ -208,187 +198,146 @@ export default function AddWorkoutModal({ onClose, onAdd }: Props) {
         {/* ── Step 2 ── */}
         {step === 2 && (
           <>
-          <div className="overflow-y-auto flex-1 px-5 pb-4">
-
-            {/* Exercise list */}
-            {exercises.length > 0 && (
-              <div className="space-y-2 mb-3">
-                {exercises.map((ex, i) => {
-                  const isOpen = expandedIdx === i;
-                  return (
-                    <div
-                      key={i}
-                      className="rounded-2xl overflow-hidden"
-                      style={{ background: "var(--surface-2)" }}
-                    >
-                      {/* Exercise header row */}
-                      <button
-                        className="w-full flex items-center px-4 py-3 text-left active:opacity-70"
-                        onClick={() => toggleExpand(i)}
-                      >
-                        <div className="flex-1 min-w-0">
-                          <div className="text-sm font-semibold truncate" style={{ color: "var(--text-primary)" }}>
-                            {ex.name}
-                          </div>
-                          {ex.sets.length > 0 && (
-                            <div className="flex flex-wrap gap-1 mt-1.5">
-                              {ex.sets.map((s, si) => (
-                                <span
-                                  key={si}
-                                  className="text-xs px-2 py-0.5 rounded-lg tabular-nums"
-                                  style={{ background: "var(--surface)", color: "var(--text-secondary)" }}
-                                >
-                                  {[s.reps && `${s.reps}×`, s.weight && `${s.weight} lb`].filter(Boolean).join(" ")}
-                                </span>
-                              ))}
-                            </div>
-                          )}
-                          {ex.sets.length === 0 && (
-                            <div className="text-xs mt-0.5" style={{ color: "var(--text-secondary)" }}>
-                              Tap to add sets
-                            </div>
-                          )}
-                        </div>
-                        <svg
-                          width="16" height="16" viewBox="0 0 24 24" fill="none"
-                          stroke="currentColor" strokeWidth="2" strokeLinecap="round"
-                          style={{
-                            color: "var(--text-secondary)",
-                            flexShrink: 0,
-                            marginLeft: 8,
-                            transform: isOpen ? "rotate(180deg)" : "none",
-                            transition: "transform 0.2s",
-                          }}
-                        >
-                          <polyline points="6 9 12 15 18 9" />
-                        </svg>
-                      </button>
-
-                      {/* Expanded: sets + add-set form */}
-                      {isOpen && (
-                        <div style={{ borderTop: "1px solid var(--border)" }}>
-                          {/* Existing sets */}
-                          {ex.sets.map((s, si) => (
-                            <div
-                              key={si}
-                              className="flex items-center px-4 py-2.5 gap-3"
-                              style={{ borderBottom: "1px solid var(--border)" }}
-                            >
-                              <span className="text-xs w-5 text-center tabular-nums flex-none" style={{ color: "var(--text-secondary)" }}>
-                                {si + 1}
-                              </span>
-                              <span className="flex-1 text-sm tabular-nums" style={{ color: "var(--text-primary)" }}>
-                                {[s.reps && `${s.reps} reps`, s.weight && `${s.weight} lb`].filter(Boolean).join("  ·  ")}
-                              </span>
-                              <button
-                                onClick={() => removeSet(i, si)}
-                                className="w-6 h-6 flex-none rounded flex items-center justify-center text-xs"
-                                style={{ color: "#f87171" }}
-                              >
-                                ×
-                              </button>
-                            </div>
-                          ))}
-
-                          {/* Add set row */}
-                          <div className="flex items-center gap-2 px-4 py-3">
-                            <input
-                              type="number"
-                              inputMode="numeric"
-                              placeholder="Reps"
-                              value={newSetDraft.reps}
-                              onChange={(e) => setNewSetDraft((d) => ({ ...d, reps: e.target.value }))}
-                              className="flex-1 rounded-xl px-3 py-2 text-sm text-center outline-none"
-                              style={{ background: "var(--surface)", color: "var(--text-primary)", border: "1px solid var(--border)" }}
-                            />
-                            <input
-                              type="number"
-                              inputMode="decimal"
-                              placeholder="lb"
-                              value={newSetDraft.weight}
-                              onChange={(e) => setNewSetDraft((d) => ({ ...d, weight: e.target.value }))}
-                              className="flex-1 rounded-xl px-3 py-2 text-sm text-center outline-none"
-                              style={{ background: "var(--surface)", color: "var(--text-primary)", border: "1px solid var(--border)" }}
-                            />
-                            <button
-                              onClick={() => addSet(i)}
-                              disabled={!newSetDraft.reps && !newSetDraft.weight}
-                              className="px-4 py-2 rounded-xl text-sm font-semibold transition-opacity"
-                              style={{
-                                background: "var(--accent)",
-                                color: "#fff",
-                                opacity: newSetDraft.reps || newSetDraft.weight ? 1 : 0.4,
-                              }}
-                            >
-                              Add
-                            </button>
-                          </div>
-
-                          {/* Remove exercise */}
-                          <div className="px-4 pb-3">
-                            <button
-                              onClick={() => removeExercise(i)}
-                              className="text-xs active:opacity-60"
-                              style={{ color: "#f87171" }}
-                            >
-                              Remove exercise
-                            </button>
-                          </div>
-                        </div>
-                      )}
-                    </div>
-                  );
-                })}
-              </div>
+          {/* Scrollable exercise list */}
+          <div className="overflow-y-auto flex-1 px-5 pt-3 pb-2">
+            {exercises.length === 0 && !addingEx && (
+              <p className="text-center py-6 text-sm" style={{ color: "var(--text-secondary)" }}>
+                Tap <strong style={{ color: "var(--text-primary)" }}>+ Add Exercise</strong> below to get started.
+              </p>
             )}
 
-            {/* Add exercise */}
+            {exercises.map((ex, i) => {
+              const isOpen = expandedIdx === i;
+              return (
+                <div
+                  key={i}
+                  className="rounded-2xl overflow-hidden mb-2"
+                  style={{ background: "var(--surface-2)" }}
+                >
+                  {/* Exercise header */}
+                  <button
+                    className="w-full flex items-center px-4 py-3 text-left active:opacity-70"
+                    onClick={() => toggleExpand(i)}
+                  >
+                    <div className="flex-1 min-w-0">
+                      <div className="text-sm font-semibold truncate" style={{ color: "var(--text-primary)" }}>
+                        {ex.name}
+                      </div>
+                      {ex.sets.length > 0 ? (
+                        <div className="flex flex-wrap gap-1 mt-1.5">
+                          {ex.sets.map((s, si) => (
+                            <span key={si} className="text-xs px-2 py-0.5 rounded-lg tabular-nums"
+                              style={{ background: "var(--surface)", color: "var(--text-secondary)" }}>
+                              {[s.reps && `${s.reps}×`, s.weight && `${s.weight} lb`].filter(Boolean).join(" ")}
+                            </span>
+                          ))}
+                        </div>
+                      ) : (
+                        <div className="text-xs mt-0.5" style={{ color: "var(--text-secondary)" }}>Tap to log sets</div>
+                      )}
+                    </div>
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none"
+                      stroke="currentColor" strokeWidth="2" strokeLinecap="round"
+                      style={{ color: "var(--text-secondary)", flexShrink: 0, marginLeft: 8,
+                        transform: isOpen ? "rotate(180deg)" : "none", transition: "transform 0.2s" }}>
+                      <polyline points="6 9 12 15 18 9" />
+                    </svg>
+                  </button>
+
+                  {/* Expanded: sets + log-set form */}
+                  {isOpen && (
+                    <div style={{ borderTop: "1px solid var(--border)" }}>
+                      {ex.sets.map((s, si) => (
+                        <div key={si} className="flex items-center px-4 py-2.5 gap-3"
+                          style={{ borderBottom: "1px solid var(--border)" }}>
+                          <span className="text-xs w-5 text-center tabular-nums flex-none" style={{ color: "var(--text-secondary)" }}>
+                            {si + 1}
+                          </span>
+                          <span className="flex-1 text-sm tabular-nums" style={{ color: "var(--text-primary)" }}>
+                            {[s.reps && `${s.reps} reps`, s.weight && `${s.weight} lb`].filter(Boolean).join("  ·  ")}
+                          </span>
+                          <button onClick={() => removeSet(i, si)}
+                            className="w-7 h-7 flex-none rounded-lg flex items-center justify-center"
+                            style={{ color: "#f87171", background: "rgba(248,113,113,0.1)" }}>
+                            ×
+                          </button>
+                        </div>
+                      ))}
+
+                      {/* Log set row */}
+                      <div className="px-4 py-3" style={{ borderBottom: "1px solid var(--border)" }}>
+                        <p className="text-xs font-medium mb-2" style={{ color: "var(--text-secondary)" }}>Log set</p>
+                        <div className="flex items-center gap-2">
+                          <div className="flex-1">
+                            <input type="number" inputMode="numeric" placeholder="Reps"
+                              value={newSetDraft.reps}
+                              onChange={(e) => setNewSetDraft((d) => ({ ...d, reps: e.target.value }))}
+                              className="w-full rounded-xl px-3 py-3 text-base text-center outline-none"
+                              style={{ background: "var(--surface)", color: "var(--text-primary)", border: "1px solid var(--border)" }} />
+                          </div>
+                          <div className="flex-1">
+                            <input type="number" inputMode="decimal" placeholder="Weight (lb)"
+                              value={newSetDraft.weight}
+                              onChange={(e) => setNewSetDraft((d) => ({ ...d, weight: e.target.value }))}
+                              className="w-full rounded-xl px-3 py-3 text-base text-center outline-none"
+                              style={{ background: "var(--surface)", color: "var(--text-primary)", border: "1px solid var(--border)" }} />
+                          </div>
+                          <button onClick={() => addSet(i)}
+                            disabled={!newSetDraft.reps && !newSetDraft.weight}
+                            className="px-4 py-3 rounded-xl font-semibold text-sm transition-opacity"
+                            style={{ background: "var(--accent)", color: "#fff",
+                              opacity: newSetDraft.reps || newSetDraft.weight ? 1 : 0.4 }}>
+                            Add
+                          </button>
+                        </div>
+                      </div>
+
+                      <div className="px-4 py-2.5">
+                        <button onClick={() => removeExercise(i)} className="text-xs active:opacity-60"
+                          style={{ color: "#f87171" }}>
+                          Remove exercise
+                        </button>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+
+          {/* Pinned footer: add exercise */}
+          <div className="flex-none px-5 py-3" style={{ borderTop: "1px solid var(--border)" }}>
             {addingEx ? (
-              <div
-                className="rounded-2xl p-4 mb-4"
-                style={{ background: "var(--surface-2)", border: "1px solid var(--accent)" }}
-              >
-                <input
-                  type="text"
-                  placeholder="Exercise name"
-                  value={newExName}
+              <div className="rounded-2xl p-4" style={{ background: "var(--surface-2)", border: "1px solid var(--accent)" }}>
+                <input type="text" placeholder="Exercise name" value={newExName}
                   onChange={(e) => setNewExName(e.target.value)}
                   onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); confirmNewExercise(); } }}
                   autoFocus
                   className="w-full rounded-xl px-3 py-2.5 text-base outline-none mb-3"
-                  style={{ background: "var(--surface)", color: "var(--text-primary)", border: "1px solid var(--border)" }}
-                />
+                  style={{ background: "var(--surface)", color: "var(--text-primary)", border: "1px solid var(--border)" }} />
                 <div className="flex gap-2">
-                  <button
-                    onClick={() => { setAddingEx(false); setNewExName(""); }}
-                    className="flex-1 py-2 rounded-xl text-sm"
-                    style={{ background: "var(--surface)", color: "var(--text-secondary)" }}
-                  >
+                  <button onClick={() => { setAddingEx(false); setNewExName(""); }}
+                    className="flex-1 py-2.5 rounded-xl text-sm"
+                    style={{ background: "var(--surface)", color: "var(--text-secondary)" }}>
                     Cancel
                   </button>
-                  <button
-                    onClick={confirmNewExercise}
-                    disabled={!newExName.trim()}
-                    className="flex-1 py-2 rounded-xl text-sm font-semibold transition-opacity"
-                    style={{ background: "var(--accent)", color: "#fff", opacity: newExName.trim() ? 1 : 0.45 }}
-                  >
+                  <button onClick={confirmNewExercise} disabled={!newExName.trim()}
+                    className="flex-1 py-2.5 rounded-xl text-sm font-semibold transition-opacity"
+                    style={{ background: "var(--accent)", color: "#fff", opacity: newExName.trim() ? 1 : 0.45 }}>
                     Add
                   </button>
                 </div>
               </div>
             ) : (
-              <button
-                onClick={() => setAddingEx(true)}
-                className="w-full py-3 rounded-2xl text-sm font-semibold mb-4 flex items-center justify-center gap-2 active:opacity-70"
-                style={{ background: "var(--surface-2)", color: "var(--accent)", border: "1px dashed var(--accent)" }}
-              >
+              <button onClick={() => setAddingEx(true)}
+                className="w-full py-3.5 rounded-2xl text-sm font-semibold flex items-center justify-center gap-2 active:opacity-70"
+                style={{ background: "var(--surface-2)", color: "var(--accent)", border: "1px dashed var(--accent)" }}>
                 <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
                   <line x1="12" y1="5" x2="12" y2="19" /><line x1="5" y1="12" x2="19" y2="12" />
                 </svg>
-                Add Exercise
+                + Add Exercise
               </button>
             )}
-
           </div>
           </>
         )}

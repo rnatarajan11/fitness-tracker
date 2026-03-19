@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import type { WalkEntry } from "@/lib/types";
 
 function todayISO() { return new Date().toLocaleDateString("en-CA"); }
@@ -23,16 +23,6 @@ export default function AddWalkModal({ onClose, onAdd }: Props) {
     incline:     "",
   });
   const [submitting, setSubmitting] = useState(false);
-  const [maxHeight,  setMaxHeight]  = useState("92dvh");
-
-  useEffect(() => {
-    const vv = window.visualViewport;
-    if (!vv) return;
-    const update = () => setMaxHeight(`${vv.height * 0.92}px`);
-    vv.addEventListener("resize", update);
-    update();
-    return () => vv.removeEventListener("resize", update);
-  }, []);
 
   function field(key: keyof typeof form, val: string) {
     setForm((f) => ({ ...f, [key]: val }));
@@ -62,7 +52,7 @@ export default function AddWalkModal({ onClose, onAdd }: Props) {
       />
       <div
         className="relative rounded-t-3xl flex flex-col"
-        style={{ background: "var(--surface)", maxHeight }}
+        style={{ background: "var(--surface)", maxHeight: "92dvh" }}
       >
         <div className="flex justify-center pt-3 pb-1 flex-none">
           <div className="w-10 h-1 rounded-full" style={{ background: "var(--border)" }} />
