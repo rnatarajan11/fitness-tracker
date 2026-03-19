@@ -29,18 +29,16 @@ export default function FoodPage() {
   const [showModal,  setShowModal]  = useState(false);
   const [prefill,    setPrefill]    = useState<Partial<FoodEntry>>({});
   const [expandedId, setExpandedId] = useState<string | null>(null);
-  const [goals,      setGoals]      = useState(FALLBACK_GOALS);
+  const [goals,      setGoals]      = useState<typeof FALLBACK_GOALS | null>(null);
 
   useEffect(() => {
     // Load profile goals
     profileApi.get().then((p) => {
-      if (p) {
-        setGoals({
-          calories: Number(p.dailyCalorieGoal) || FALLBACK_GOALS.calories,
-          protein:  Number(p.dailyProteinGoal) || FALLBACK_GOALS.protein,
-        });
-      }
-    }).catch(() => {}); // silently fall back to defaults
+      setGoals({
+        calories: Number(p?.dailyCalorieGoal) || FALLBACK_GOALS.calories,
+        protein:  Number(p?.dailyProteinGoal) || FALLBACK_GOALS.protein,
+      });
+    }).catch(() => { setGoals(FALLBACK_GOALS); });
 
     // Load today's food
     foodApi
@@ -107,11 +105,15 @@ export default function FoodPage() {
       <div className="px-4 pt-4 pb-4 space-y-5">
         {/* Calorie ring */}
         <div className="flex justify-center pt-1">
-          <CalorieRing eaten={Math.round(totals.calories)} goal={goals.calories} />
+          {goals
+            ? <CalorieRing eaten={Math.round(totals.calories)} goal={goals.calories} />
+            : <div className="w-44 h-44 rounded-full animate-pulse" style={{ background: "var(--surface)" }} />}
         </div>
 
         {/* Protein card only */}
-        <MacroCard label="Protein" current={Math.round(totals.protein)} goal={goals.protein} color="#818cf8" />
+        {goals
+          ? <MacroCard label="Protein" current={Math.round(totals.protein)} goal={goals.protein} color="#818cf8" />
+          : <div className="h-16 rounded-2xl animate-pulse" style={{ background: "var(--surface)" }} />}
 
         {/* Food log */}
         <div>
