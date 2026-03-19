@@ -70,11 +70,14 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: `GAS returned ${probeStatus} with no Location header` }, { status: 502 });
     }
 
-    // Step 2: POST to the redirect URL to execute doPost
-    const res = await fetch(location, { method: "POST", headers, body: jsonBody });
+    // Step 2: GET the redirect URL — GAS echo URLs serve the doPost response via GET
+    const res = await fetch(location, { method: "GET", cache: "no-store" });
     const text = await res.text();
+    if (!res.ok) {
+      return NextResponse.json({ error: `GAS echo HTTP ${res.status}: ${text.slice(0, 200)}` }, { status: 502 });
+    }
     try { return NextResponse.json(JSON.parse(text)); }
-    catch { return NextResponse.json({ error: `GAS echo non-JSON (status ${res.status}): ${text.slice(0, 200)}` }, { status: 502 }); }
+    catch { return NextResponse.json({ error: `GAS echo non-JSON (${res.status}): ${text.slice(0, 200)}` }, { status: 502 }); }
 
   } catch (err) {
     return NextResponse.json({ error: String(err) }, { status: 502 });

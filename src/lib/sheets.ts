@@ -1,9 +1,8 @@
 /**
  * Google Sheets client — routes through /api/sheets (server-side proxy).
  *
- * Both reads and writes use GET with URL-encoded params. GAS POST requests
- * trigger a 302 redirect that browsers follow as GET (losing the body), so
- * doPost is never reliably called. Instead, doGet handles all actions.
+ * Reads use proxy GET. Writes use proxy POST — POST requests are not cached
+ * by GAS, unlike GET requests which GAS caches aggressively.
  */
 
 import type {
@@ -37,10 +36,19 @@ async function gasPost<T>(
   action: string,
   payload: Record<string, unknown>
 ): Promise<T> {
-  // GAS POST requests trigger a 302 redirect which browsers follow as GET,
-  // so doPost is never called. Route writes through the same GET proxy path
-  // as reads — params survive the redirect chain intact and doGet handles them.
-  return gasGet<T>(action, payload);
+  // Writes go via POST — GAS does not cache POST responses.
+  // Proxy POSTs to the GAS exec URL, captures the 302 redirect, then GETs
+  // the echo URL to retrieve the doPost response.
+  const res = await fetch(PROXY, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ action, ...payload }),
+    cache: "no-store",
+  });
+  const json = await res.json();
+  if (json?.error) throw new Error(json.error);
+  if (!res.ok) throw new Error(`Sheets proxy error: ${res.status}`);
+  return json as T;
 }
 
 // ─── Generic helpers ────────────────────────────────────────────────────────
