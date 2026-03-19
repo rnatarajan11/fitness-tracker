@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import type { WorkoutEntry, Exercise, ExerciseSet } from "@/lib/types";
 
 function todayISO() { return new Date().toLocaleDateString("en-CA"); }
