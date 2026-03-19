@@ -137,7 +137,7 @@ export default function AddWorkoutModal({ onClose, onAdd }: Props) {
         </div>
 
         {/* Header */}
-        <div className="flex items-center px-5 py-3 flex-none">
+        <div className="flex items-center px-5 py-3 flex-none" style={{ borderBottom: "1px solid var(--border)" }}>
           {step === 2 && (
             <button
               onClick={() => setStep(1)}
@@ -150,9 +150,18 @@ export default function AddWorkoutModal({ onClose, onAdd }: Props) {
           <h2 className="text-lg font-semibold" style={{ color: "var(--text-primary)" }}>
             {step === 1 ? "Log Workout" : "Add Exercises"}
           </h2>
-          <span className="ml-auto text-xs" style={{ color: "var(--text-secondary)" }}>
-            {step} / 2
-          </span>
+          {step === 2 ? (
+            <button
+              onClick={handleSubmit}
+              disabled={submitting}
+              className="ml-auto px-5 py-2 rounded-xl font-semibold text-sm text-white transition-opacity"
+              style={{ background: "var(--accent)", opacity: submitting ? 0.45 : 1 }}
+            >
+              {submitting ? "Saving…" : "Log"}
+            </button>
+          ) : (
+            <span className="ml-auto text-xs" style={{ color: "var(--text-secondary)" }}>1 / 2</span>
+          )}
         </div>
 
         {/* ── Step 1 ── */}
@@ -380,21 +389,6 @@ export default function AddWorkoutModal({ onClose, onAdd }: Props) {
               </button>
             )}
 
-          </div>
-          <div
-            className="flex-none px-5 pt-3"
-            style={{ paddingBottom: "max(env(safe-area-inset-bottom), 20px)", borderTop: "1px solid var(--border)" }}
-          >
-            <button
-              onClick={handleSubmit}
-              disabled={submitting}
-              className="w-full py-4 rounded-2xl font-semibold text-white transition-opacity"
-              style={{ background: "var(--accent)", opacity: submitting ? 0.45 : 1 }}
-            >
-              {submitting
-                ? "Saving…"
-                : `Log Workout${exercises.length ? ` · ${exercises.length} exercise${exercises.length !== 1 ? "s" : ""}` : ""}`}
-            </button>
           </div>
           </>
         )}

@@ -68,13 +68,21 @@ export default function AddWalkModal({ onClose, onAdd }: Props) {
           <div className="w-10 h-1 rounded-full" style={{ background: "var(--border)" }} />
         </div>
 
-        <form id="walk-form" onSubmit={handleSubmit} className="overflow-y-auto px-5 pb-4 flex-1">
-          <h2
-            className="text-lg font-semibold mt-2 mb-4"
-            style={{ color: "var(--text-primary)" }}
+        {/* Header */}
+        <div className="flex items-center justify-between px-5 py-3 flex-none" style={{ borderBottom: "1px solid var(--border)" }}>
+          <h2 className="text-lg font-semibold" style={{ color: "var(--text-primary)" }}>Log Walk</h2>
+          <button
+            type="submit"
+            form="walk-form"
+            disabled={!isValid || submitting}
+            className="px-5 py-2 rounded-xl font-semibold text-sm text-white transition-opacity"
+            style={{ background: "var(--accent)", opacity: !isValid || submitting ? 0.45 : 1 }}
           >
-            Log Walk
-          </h2>
+            {submitting ? "Saving…" : "Log"}
+          </button>
+        </div>
+
+        <form id="walk-form" onSubmit={handleSubmit} className="overflow-y-auto px-5 pb-8 flex-1">
 
           {/* Duration — large center */}
           <div className="mb-4">
@@ -142,20 +150,6 @@ export default function AddWalkModal({ onClose, onAdd }: Props) {
           </div>
 
         </form>
-        <div
-          className="flex-none px-5 pt-3"
-          style={{ paddingBottom: "max(env(safe-area-inset-bottom), 20px)", borderTop: "1px solid var(--border)" }}
-        >
-          <button
-            type="submit"
-            form="walk-form"
-            disabled={!isValid || submitting}
-            className="w-full py-4 rounded-2xl font-semibold text-white transition-opacity"
-            style={{ background: "var(--accent)", opacity: !isValid || submitting ? 0.45 : 1 }}
-          >
-            {submitting ? "Saving…" : "Log Walk"}
-          </button>
-        </div>
       </div>
     </div>
   );
