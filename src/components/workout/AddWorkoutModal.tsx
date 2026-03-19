@@ -34,6 +34,16 @@ export default function AddWorkoutModal({ onClose, onAdd }: Props) {
   const [addingEx,    setAddingEx]    = useState(false);
   const [newExName,   setNewExName]   = useState("");
   const [submitting,  setSubmitting]  = useState(false);
+  const [maxHeight,   setMaxHeight]   = useState("92dvh");
+
+  useEffect(() => {
+    const vv = window.visualViewport;
+    if (!vv) return;
+    const update = () => setMaxHeight(`${vv.height * 0.92}px`);
+    vv.addEventListener("resize", update);
+    update();
+    return () => vv.removeEventListener("resize", update);
+  }, []);
 
   function metaField(key: keyof typeof meta, val: string) {
     setMeta((m) => ({ ...m, [key]: val }));
@@ -119,7 +129,7 @@ export default function AddWorkoutModal({ onClose, onAdd }: Props) {
       />
       <div
         className="relative rounded-t-3xl flex flex-col"
-        style={{ background: "var(--surface)", maxHeight: "92dvh" }}
+        style={{ background: "var(--surface)", maxHeight }}
       >
         {/* Drag handle */}
         <div className="flex justify-center pt-3 pb-1 flex-none">

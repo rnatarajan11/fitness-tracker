@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import type { FoodEntry } from "@/lib/types";
 import QuickAddChips from "@/components/food/QuickAddChips";
 
@@ -37,6 +37,16 @@ export default function AddFoodModal({ prefill, onClose, onAdd, onQuickAdd }: Pr
     time:     nowTime(),
   });
   const [submitting, setSubmitting] = useState(false);
+  const [maxHeight,  setMaxHeight]  = useState("92dvh");
+
+  useEffect(() => {
+    const vv = window.visualViewport;
+    if (!vv) return;
+    const update = () => setMaxHeight(`${vv.height * 0.92}px`);
+    vv.addEventListener("resize", update);
+    update();
+    return () => vv.removeEventListener("resize", update);
+  }, []);
 
   function field(key: keyof typeof form, value: string) {
     setForm((f) => ({ ...f, [key]: value }));
@@ -80,7 +90,7 @@ export default function AddFoodModal({ prefill, onClose, onAdd, onQuickAdd }: Pr
         className="relative rounded-t-3xl"
         style={{
           background: "var(--surface)",
-          maxHeight: "92dvh",
+          maxHeight,
           display: "flex",
           flexDirection: "column",
         }}
