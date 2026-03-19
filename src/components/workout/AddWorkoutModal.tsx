@@ -198,11 +198,46 @@ export default function AddWorkoutModal({ onClose, onAdd }: Props) {
         {/* ── Step 2 ── */}
         {step === 2 && (
           <>
+          {/* Pinned top: add exercise */}
+          <div className="flex-none px-5 py-3" style={{ borderBottom: "1px solid var(--border)" }}>
+            {addingEx ? (
+              <div className="rounded-2xl p-4" style={{ background: "var(--surface-2)", border: "1px solid var(--accent)" }}>
+                <input type="text" placeholder="Exercise name" value={newExName}
+                  onChange={(e) => setNewExName(e.target.value)}
+                  onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); confirmNewExercise(); } }}
+                  autoFocus
+                  className="w-full rounded-xl px-3 py-2.5 text-base outline-none mb-3"
+                  style={{ background: "var(--surface)", color: "var(--text-primary)", border: "1px solid var(--border)" }} />
+                <div className="flex gap-2">
+                  <button onClick={() => { setAddingEx(false); setNewExName(""); }}
+                    className="flex-1 py-2.5 rounded-xl text-sm"
+                    style={{ background: "var(--surface)", color: "var(--text-secondary)" }}>
+                    Cancel
+                  </button>
+                  <button onClick={confirmNewExercise} disabled={!newExName.trim()}
+                    className="flex-1 py-2.5 rounded-xl text-sm font-semibold transition-opacity"
+                    style={{ background: "var(--accent)", color: "#fff", opacity: newExName.trim() ? 1 : 0.45 }}>
+                    Add
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <button onClick={() => setAddingEx(true)}
+                className="w-full py-3.5 rounded-2xl text-sm font-semibold flex items-center justify-center gap-2 active:opacity-70"
+                style={{ background: "var(--surface-2)", color: "var(--accent)", border: "1px dashed var(--accent)" }}>
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
+                  <line x1="12" y1="5" x2="12" y2="19" /><line x1="5" y1="12" x2="19" y2="12" />
+                </svg>
+                + Add Exercise
+              </button>
+            )}
+          </div>
+
           {/* Scrollable exercise list */}
           <div className="overflow-y-auto flex-1 px-5 pt-3 pb-2">
             {exercises.length === 0 && !addingEx && (
               <p className="text-center py-6 text-sm" style={{ color: "var(--text-secondary)" }}>
-                Tap <strong style={{ color: "var(--text-primary)" }}>+ Add Exercise</strong> below to get started.
+                Add an exercise above to get started.
               </p>
             )}
 
@@ -305,40 +340,6 @@ export default function AddWorkoutModal({ onClose, onAdd }: Props) {
             })}
           </div>
 
-          {/* Pinned footer: add exercise */}
-          <div className="flex-none px-5 py-3" style={{ borderTop: "1px solid var(--border)" }}>
-            {addingEx ? (
-              <div className="rounded-2xl p-4" style={{ background: "var(--surface-2)", border: "1px solid var(--accent)" }}>
-                <input type="text" placeholder="Exercise name" value={newExName}
-                  onChange={(e) => setNewExName(e.target.value)}
-                  onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); confirmNewExercise(); } }}
-                  autoFocus
-                  className="w-full rounded-xl px-3 py-2.5 text-base outline-none mb-3"
-                  style={{ background: "var(--surface)", color: "var(--text-primary)", border: "1px solid var(--border)" }} />
-                <div className="flex gap-2">
-                  <button onClick={() => { setAddingEx(false); setNewExName(""); }}
-                    className="flex-1 py-2.5 rounded-xl text-sm"
-                    style={{ background: "var(--surface)", color: "var(--text-secondary)" }}>
-                    Cancel
-                  </button>
-                  <button onClick={confirmNewExercise} disabled={!newExName.trim()}
-                    className="flex-1 py-2.5 rounded-xl text-sm font-semibold transition-opacity"
-                    style={{ background: "var(--accent)", color: "#fff", opacity: newExName.trim() ? 1 : 0.45 }}>
-                    Add
-                  </button>
-                </div>
-              </div>
-            ) : (
-              <button onClick={() => setAddingEx(true)}
-                className="w-full py-3.5 rounded-2xl text-sm font-semibold flex items-center justify-center gap-2 active:opacity-70"
-                style={{ background: "var(--surface-2)", color: "var(--accent)", border: "1px dashed var(--accent)" }}>
-                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
-                  <line x1="12" y1="5" x2="12" y2="19" /><line x1="5" y1="12" x2="19" y2="12" />
-                </svg>
-                + Add Exercise
-              </button>
-            )}
-          </div>
           </>
         )}
       </div>
