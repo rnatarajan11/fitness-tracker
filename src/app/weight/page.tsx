@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { weightApi } from "@/lib/sheets";
+import { weightApi, profileApi } from "@/lib/sheets";
 import type { WeightEntry } from "@/lib/types";
 import AddWeightModal from "@/components/weight/AddWeightModal";
 
@@ -11,8 +11,13 @@ export default function WeightPage() {
   const [error,     setError]     = useState<string | null>(null);
   const [showModal,  setShowModal]  = useState(false);
   const [editEntry,  setEditEntry]  = useState<WeightEntry | null>(null);
+  const [goalLb,    setGoalLb]    = useState<number | null>(null);
 
   useEffect(() => {
+    profileApi.get().then((p) => {
+      if (p && p.goalWeightLb) setGoalLb(Number(p.goalWeightLb));
+    }).catch(() => {});
+
     weightApi
       .getAll()
       .then((all) => {
@@ -162,6 +167,28 @@ export default function WeightPage() {
                   style={{ color: "var(--text-primary)" }}
                 >
                   {avg7.toFixed(1)} lb
+                </span>
+              </div>
+            )}
+
+            {/* To goal pill */}
+            {avg7 !== null && goalLb !== null && (
+              <div
+                className="rounded-2xl px-4 py-3.5 flex items-center justify-between"
+                style={{ background: "var(--surface)" }}
+              >
+                <span className="text-sm" style={{ color: "var(--text-secondary)" }}>
+                  to goal ({goalLb} lb)
+                </span>
+                <span
+                  className="text-base font-semibold tabular-nums"
+                  style={{
+                    color: avg7 <= goalLb ? "#34d399" : "var(--text-primary)",
+                  }}
+                >
+                  {avg7 <= goalLb
+                    ? "Goal reached!"
+                    : `${(avg7 - goalLb).toFixed(1)} lb to go`}
                 </span>
               </div>
             )}
