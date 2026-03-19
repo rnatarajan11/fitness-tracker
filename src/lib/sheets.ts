@@ -24,6 +24,7 @@ async function gasGet<T>(
   const qs = new URLSearchParams({
     action,
     payload: JSON.stringify(params),
+    _t: Date.now().toString(), // bust GAS response cache
   });
   const res = await fetch(`${PROXY}?${qs}`, { cache: "no-store" });
   const json = await res.json();
