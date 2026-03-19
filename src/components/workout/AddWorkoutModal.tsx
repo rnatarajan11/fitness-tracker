@@ -121,7 +121,7 @@ export default function AddWorkoutModal({ onClose, onAdd }: Props) {
   const metaValid = meta.name.trim().length > 0;
 
   return (
-    <div className="fixed inset-0 z-50 flex flex-col justify-end">
+    <div className="fixed inset-0 z-[60] flex flex-col justify-end">
       <div
         className="absolute inset-0"
         style={{ background: "rgba(0,0,0,0.65)" }}

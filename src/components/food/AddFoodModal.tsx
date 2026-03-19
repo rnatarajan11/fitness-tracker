@@ -77,7 +77,7 @@ export default function AddFoodModal({ prefill, onClose, onAdd, onQuickAdd }: Pr
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex flex-col justify-end">
+    <div className="fixed inset-0 z-[60] flex flex-col justify-end">
       {/* Backdrop */}
       <div
         className="absolute inset-0"

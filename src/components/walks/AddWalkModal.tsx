@@ -54,7 +54,7 @@ export default function AddWalkModal({ onClose, onAdd }: Props) {
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex flex-col justify-end">
+    <div className="fixed inset-0 z-[60] flex flex-col justify-end">
       <div
         className="absolute inset-0"
         style={{ background: "rgba(0,0,0,0.65)" }}
