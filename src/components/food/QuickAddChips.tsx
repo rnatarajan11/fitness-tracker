@@ -35,7 +35,7 @@ function loadItems(): QuickItem[] {
     const stored = localStorage.getItem(STORAGE_KEY);
     if (stored !== null) {
       const parsed = JSON.parse(stored);
-      if (Array.isArray(parsed) && parsed.length > 0 && "label" in parsed[0]) {
+      if (Array.isArray(parsed) && (parsed.length === 0 || "label" in parsed[0])) {
         return parsed as QuickItem[];
       }
     }
