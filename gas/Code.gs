@@ -23,6 +23,18 @@ function doGet(e) {
     switch (action) {
       case "getRows":
         return jsonResponse(getRows(params.sheet));
+      case "appendRow":
+        appendRow(params.sheet, params.row);
+        return jsonResponse({ ok: true });
+      case "updateRow":
+        updateRow(params.sheet, params.row);
+        return jsonResponse({ ok: true });
+      case "deleteRow":
+        deleteRow(params.sheet, params.id);
+        return jsonResponse({ ok: true });
+      case "saveProfile":
+        saveProfile(params.row);
+        return jsonResponse({ ok: true });
       default:
         return jsonResponse({ error: "Unknown action: " + action });
     }

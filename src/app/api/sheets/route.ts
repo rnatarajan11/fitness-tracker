@@ -18,10 +18,22 @@ export async function GET(request: NextRequest) {
   try {
     const res = await fetch(gasUrl.toString(), { cache: "no-store" });
     const text = await res.text();
-    const data = JSON.parse(text);
-    return NextResponse.json(data);
+    if (!res.ok) {
+      return NextResponse.json(
+        { error: `GAS returned HTTP ${res.status}: ${text.slice(0, 500)}` },
+        { status: 502 }
+      );
+    }
+    try {
+      return NextResponse.json(JSON.parse(text));
+    } catch {
+      return NextResponse.json(
+        { error: `GAS returned non-JSON (HTTP ${res.status}): ${text.slice(0, 500)}` },
+        { status: 502 }
+      );
+    }
   } catch (err) {
-    return NextResponse.json({ error: String(err) }, { status: 502 });
+    return NextResponse.json({ error: `Proxy fetch failed: ${String(err)}` }, { status: 502 });
   }
 }
 

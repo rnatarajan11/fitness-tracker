@@ -1,6 +1,9 @@
 /**
- * Google Sheets client — routes through /api/sheets (server-side proxy)
- * to avoid CORS issues with Google Apps Script.
+ * Google Sheets client — routes through /api/sheets (server-side proxy).
+ *
+ * Both reads and writes use GET with URL-encoded params. GAS POST requests
+ * trigger a 302 redirect that browsers follow as GET (losing the body), so
+ * doPost is never reliably called. Instead, doGet handles all actions.
  */
 
 import type {
@@ -12,11 +15,7 @@ import type {
   SheetName,
 } from "./types";
 
-// Reads go through the server-side proxy (avoids CORS on GET).
-// Writes go directly from the browser to GAS using no-cors POST —
-// this avoids Vercel datacenter IPs being blocked by Google for POSTs.
 const PROXY = "/api/sheets";
-const GAS_DIRECT = process.env.NEXT_PUBLIC_SHEETS_API_URL ?? "";
 
 async function gasGet<T>(
   action: string,
@@ -27,9 +26,9 @@ async function gasGet<T>(
     payload: JSON.stringify(params),
   });
   const res = await fetch(`${PROXY}?${qs}`, { cache: "no-store" });
-  if (!res.ok) throw new Error(`Sheets proxy error: ${res.status}`);
   const json = await res.json();
   if (json?.error) throw new Error(json.error);
+  if (!res.ok) throw new Error(`Sheets proxy error: ${res.status}`);
   return json as T;
 }
 
@@ -37,16 +36,10 @@ async function gasPost<T>(
   action: string,
   payload: Record<string, unknown>
 ): Promise<T> {
-  if (!GAS_DIRECT) throw new Error("GAS URL not configured");
-  // Content-Type text/plain avoids CORS preflight; GAS reads via e.postData.contents
-  await fetch(GAS_DIRECT, {
-    method: "POST",
-    mode: "no-cors",
-    headers: { "Content-Type": "text/plain" },
-    body: JSON.stringify({ action, ...payload }),
-  });
-  // Response is opaque with no-cors — rely on optimistic UI updates
-  return { ok: true } as unknown as T;
+  // GAS POST requests trigger a 302 redirect which browsers follow as GET,
+  // so doPost is never called. Route writes through the same GET proxy path
+  // as reads — params survive the redirect chain intact and doGet handles them.
+  return gasGet<T>(action, payload);
 }
 
 // ─── Generic helpers ────────────────────────────────────────────────────────
